@@ -1,0 +1,11 @@
+Model Information:
+* title:	Nissan 370z Nismo (z34)
+* source:	https://sketchfab.com/3d-models/nissan-370z-nismo-z34-0e65ec130ac0417da97212b4a7b48ab7
+* author:	Outlaw Games™ (https://sketchfab.com/Outlaw_Games)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Nissan 370z Nismo (z34)" (https://sketchfab.com/3d-models/nissan-370z-nismo-z34-0e65ec130ac0417da97212b4a7b48ab7) by Outlaw Games™ (https://sketchfab.com/Outlaw_Games) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
