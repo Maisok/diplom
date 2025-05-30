@@ -13,8 +13,8 @@ use App\Models\Car;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\View;
 
 class ReferenceController extends Controller
 {
@@ -22,7 +22,7 @@ class ReferenceController extends Controller
     {
         // Поиск
         $search = $request->input('search');
-    
+
         // Получаем номера страниц
         $bodyTypePage = $request->input('page_body_type', 1);
         $countryPage = $request->input('page_country', 1);
@@ -30,26 +30,21 @@ class ReferenceController extends Controller
         $engineTypePage = $request->input('page_engine_type', 1);
         $transmissionTypePage = $request->input('page_transmission_type', 1);
         $branchPage = $request->input('page_branch', 1);
-    
-        // Фильтрация и пагинация для каждого
+
+        // Фильтрация и пагинация для каждого справочника
         $bodyTypes = BodyType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_body_type', $bodyTypePage);
-    
         $countries = Country::when($search, fn($q) => $q->where('name', 'like', "%$search%")->orWhere('code', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_country', $countryPage);
-    
         $driveTypes = DriveType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_drive_type', $driveTypePage);
-    
         $engineTypes = EngineType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_engine_type', $engineTypePage);
-    
         $transmissionTypes = TransmissionType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_transmission_type', $transmissionTypePage);
-    
         $branches = Branch::when($search, fn($q) => $q->where('name', 'like', "%$search%")->orWhere('address', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_branch', $branchPage);
-    
+
         return view('admin.references.index', compact(
             'bodyTypes',
             'countries',
@@ -60,29 +55,47 @@ class ReferenceController extends Controller
         ));
     }
 
-    // --- BodyType ---
+    // ————————————————————————————————
+    // BODY TYPE
+    // ————————————————————————————————
+
     public function storeBodyType(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:50|unique:body_types,name'
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:body_types,name',
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите название типа кузова.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип кузова уже существует.',
         ]);
-        
-        BodyType::create($request->only('name'));
+
+        BodyType::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип кузова успешно добавлен');
     }
 
     public function updateBodyType(Request $request, BodyType $bodyType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('body_types')->ignore($bodyType->id)
-            ]
+                Rule::unique('body_types')->ignore($bodyType->id),
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите новое название типа кузова.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип кузова уже существует.',
         ]);
-        
-        $bodyType->update($request->only('name'));
+
+        $bodyType->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип кузова успешно обновлен');
     }
 
@@ -96,46 +109,47 @@ class ReferenceController extends Controller
         return redirect()->route('admin.references.index')->with('success', 'Тип кузова успешно удален');
     }
 
-    // --- Country ---
+    // ————————————————————————————————
+    // COUNTRY
+    // ————————————————————————————————
+
     public function storeCountry(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:50|unique:countries,name',
-            'code' => 'required|string|size:2|unique:countries,code|alpha|uppercase',
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:countries,name',
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите название страны.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такая страна уже существует.',
         ]);
-        
-        Country::create([
-            'name' => $request->name,
-            'code' => strtoupper($request->code)
-        ]);
-        
+
+        Country::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Страна успешно добавлена');
     }
 
     public function updateCountry(Request $request, Country $country)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('countries')->ignore($country->id)
+                Rule::unique('countries')->ignore($country->id),
             ],
-            'code' => [
-                'required',
-                'string',
-                'size:2',
-                'alpha',
-                'uppercase',
-                Rule::unique('countries')->ignore($country->id)
-            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите новое название страны.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такая страна уже существует.',
         ]);
-        
-        $country->update([
-            'name' => $request->name,
-            'code' => strtoupper($request->code)
-        ]);
-        
+
+        $country->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Страна успешно обновлена');
     }
 
@@ -149,29 +163,47 @@ class ReferenceController extends Controller
         return redirect()->route('admin.references.index')->with('success', 'Страна успешно удалена');
     }
 
-    // --- DriveType ---
+    // ————————————————————————————————
+    // DRIVE TYPE
+    // ————————————————————————————————
+
     public function storeDriveType(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:50|unique:drive_types,name'
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:drive_types,name',
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите название типа привода.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип привода уже существует.',
         ]);
-        
-        DriveType::create($request->only('name'));
+
+        DriveType::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип привода успешно добавлен');
     }
 
     public function updateDriveType(Request $request, DriveType $driveType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('drive_types')->ignore($driveType->id)
-            ]
+                Rule::unique('drive_types')->ignore($driveType->id),
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите новое название типа привода.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип привода уже существует.',
         ]);
-        
-        $driveType->update($request->only('name'));
+
+        $driveType->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип привода успешно обновлен');
     }
 
@@ -185,29 +217,47 @@ class ReferenceController extends Controller
         return redirect()->route('admin.references.index')->with('success', 'Тип привода успешно удален');
     }
 
-    // --- EngineType ---
+    // ————————————————————————————————
+    // ENGINE TYPE
+    // ————————————————————————————————
+
     public function storeEngineType(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:50|unique:engine_types,name'
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:engine_types,name',
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите название типа двигателя.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип двигателя уже существует.',
         ]);
-        
-        EngineType::create($request->only('name'));
+
+        EngineType::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип двигателя успешно добавлен');
     }
 
     public function updateEngineType(Request $request, EngineType $engineType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('engine_types')->ignore($engineType->id)
-            ]
+                Rule::unique('engine_types')->ignore($engineType->id),
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите новое название типа двигателя.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип двигателя уже существует.',
         ]);
-        
-        $engineType->update($request->only('name'));
+
+        $engineType->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип двигателя успешно обновлен');
     }
 
@@ -221,29 +271,47 @@ class ReferenceController extends Controller
         return redirect()->route('admin.references.index')->with('success', 'Тип двигателя успешно удален');
     }
 
-    // --- TransmissionType ---
+    // ————————————————————————————————
+    // TRANSMISSION TYPE
+    // ————————————————————————————————
+
     public function storeTransmissionType(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:50|unique:transmission_types,name'
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:transmission_types,name',
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите название типа КПП.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип КПП уже существует.',
         ]);
-        
-        TransmissionType::create($request->only('name'));
+
+        TransmissionType::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип КПП успешно добавлен');
     }
 
     public function updateTransmissionType(Request $request, TransmissionType $transmissionType)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('transmission_types')->ignore($transmissionType->id)
-            ]
+                Rule::unique('transmission_types')->ignore($transmissionType->id),
+            ],
+        ], [
+            'name.required' => 'Пожалуйста, введите новое название типа КПП.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Такой тип КПП уже существует.',
         ]);
-        
-        $transmissionType->update($request->only('name'));
+
+        $transmissionType->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Тип КПП успешно обновлен');
     }
 
@@ -257,11 +325,19 @@ class ReferenceController extends Controller
         return redirect()->route('admin.references.index')->with('success', 'Тип КПП успешно удален');
     }
 
-    // --- Branch ---
+    // ————————————————————————————————
+    // BRANCH
+    // ————————————————————————————————
+
     public function storeBranch(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:50|unique:branches,name',
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:branches,name',
+            ],
             'address' => [
                 'required',
                 'string',
@@ -273,24 +349,35 @@ class ReferenceController extends Controller
                 },
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'name.required' => 'Пожалуйста, введите название филиала.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Филиал с таким названием уже существует.',
+            'address.required' => 'Пожалуйста, введите адрес филиала.',
+            'address.string' => 'Адрес должен быть строкой.',
+            'address.max' => 'Адрес не может превышать 100 символов.',
+            'image.image' => 'Загрузите корректное изображение (jpeg, png, jpg, gif, webp).',
+            'image.mimes' => 'Поддерживаются только форматы: jpeg, png, jpg, gif, webp.',
+            'image.max' => 'Изображение не должно превышать 2 МБ.',
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('branches', 'public');
+            $validated['image'] = $request->file('image')->store('branches', 'public');
         }
 
-        Branch::create($data);
+        Branch::create($validated);
         return redirect()->route('admin.references.index')->with('success', 'Филиал успешно добавлен');
     }
 
     public function updateBranch(Request $request, Branch $branch)
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('branches')->ignore($branch->id)
+                Rule::unique('branches')->ignore($branch->id),
             ],
             'address' => [
                 'required',
@@ -303,16 +390,27 @@ class ReferenceController extends Controller
                 },
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'name.required' => 'Пожалуйста, введите название филиала.',
+            'name.string' => 'Название должно быть строкой.',
+            'name.max' => 'Название не может превышать 50 символов.',
+            'name.unique' => 'Филиал с таким названием уже существует.',
+            'address.required' => 'Пожалуйста, введите адрес филиала.',
+            'address.string' => 'Адрес должен быть строкой.',
+            'address.max' => 'Адрес не может превышать 100 символов.',
+            'image.image' => 'Загрузите корректное изображение (jpeg, png, jpg, gif, webp).',
+            'image.mimes' => 'Поддерживаются только форматы: jpeg, png, jpg, gif, webp.',
+            'image.max' => 'Изображение не должно превышать 2 МБ.',
         ]);
 
         if ($request->hasFile('image')) {
-            if ($branch->image) {
+            if ($branch->image && Storage::disk('public')->exists($branch->image)) {
                 Storage::disk('public')->delete($branch->image);
             }
-            $data['image'] = $request->file('image')->store('branches', 'public');
+            $validated['image'] = $request->file('image')->store('branches', 'public');
         }
 
-        $branch->update($data);
+        $branch->update($validated);
         return redirect()->route('admin.references.index')->with('success', 'Филиал успешно обновлен');
     }
 
@@ -322,7 +420,7 @@ class ReferenceController extends Controller
             return back()->with('error', 'Невозможно удалить филиал, так как он используется в автомобилях');
         }
 
-        if ($branch->image) {
+        if ($branch->image && Storage::disk('public')->exists($branch->image)) {
             Storage::disk('public')->delete($branch->image);
         }
 

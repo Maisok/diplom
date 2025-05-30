@@ -35,6 +35,41 @@
             @endif
         </div>
 
+        <form action="{{ route('export.bookings') }}" method="GET">
+            <div>
+                <label>Статус:</label>
+                <select name="status">
+                    <option value="">Все</option>
+                    <option value="pending">Ожидает подтверждения</option>
+                    <option value="confirmed">Подтверждено</option>
+                    <option value="rejected">Отклонено</option>
+                    <option value="completed">Завершено</option>
+                </select>
+            </div>
+        
+            <div>
+                <label>Менеджер:</label>
+                <select name="manager_id">
+                    <option value="">Все</option>
+                    @foreach($managers as $manager)
+                        <option value="{{ $manager->id }}">{{ $manager->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        
+            <div>
+                <label>Дата с:</label>
+                <input type="date" name="start_date" value="{{ request('start_date') }}">
+            </div>
+        
+            <div>
+                <label>Дата по:</label>
+                <input type="date" name="end_date" value="{{ request('end_date') }}">
+            </div>
+        
+            <button type="submit">Экспортировать</button>
+        </form>
+
         <!-- Фильтры -->
         <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 mb-6">
             <div class="px-4 py-5 sm:px-6 border-b border-gray-200">

@@ -69,25 +69,8 @@
         </div>
     </form>
 
-    <!-- Форма экспорта -->
-    <form action="{{ route('bookings.export') }}" method="GET" class="mt-6 flex items-center space-x-4">
-        <div class="w-full md:w-auto">
-            <label class="block text-sm font-medium text-gray-400 mb-2">Выберите статус для экспорта</label>
-            <select name="status"
-                    class="w-full px-4 py-3 bg-[#2D2D2D] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="">Все</option>
-                <option value="pending">Ожидание</option>
-                <option value="confirmed">Подтверждено</option>
-                <option value="rejected">Отклонено</option>
-                <option value="completed">Завершено</option>
-            </select>
-        </div>
 
-        <button type="submit"
-                class="px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all whitespace-nowrap">
-            Экспортировать в Excel
-        </button>
-    </form>
+   
 </div>
 
         <!-- Таблица -->
@@ -125,7 +108,7 @@
                                 {{ $booking->booking_date->format('d.m.Y H:i') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                                {{ $booking->appointment_date->format('d.m.Y H:i') }}
+                                {{ $booking->appointment_date }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium

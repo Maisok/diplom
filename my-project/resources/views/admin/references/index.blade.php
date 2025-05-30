@@ -41,7 +41,7 @@
             </div>
         @endif
 
-        @if ($errors->any()))
+        @if ($errors->any())
             <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -185,8 +185,6 @@
                             <input type="text" name="name" placeholder="Название страны" required maxlength="50"
                                    class="block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <div class="flex space-x-2">
-                                <input type="text" name="code" placeholder="Код страны" required maxlength="2"
-                                       class="block w-20 px-3 py-2 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm uppercase">
                                 <button type="submit"
                                         class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     <svg class="-ml-0.5 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -206,7 +204,6 @@
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $country->name }}</p>
-                                            <p class="text-xs text-gray-500 mt-1">{{ $country->code }}</p>
                                         </div>
                                         <div class="flex items-center space-x-2">
                                             <!-- Edit Form -->
@@ -215,8 +212,6 @@
                                                 <div class="flex space-x-2">
                                                     <input type="text" name="name" value="{{ $country->name }}" required maxlength="50"
                                                            class="w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                                    <input type="text" name="code" value="{{ $country->code }}" required maxlength="2"
-                                                           class="w-12 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm uppercase">
                                                 </div>
                                                 <button type="submit" onclick="return confirm('Сохранить изменения?')"
                                                         class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">

@@ -96,20 +96,20 @@
                             <label for="vin" class="block text-sm font-medium text-gray-700 mb-1">VIN</label>
                             <input type="text" name="vin" id="vin" maxlength="17"
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                   placeholder="17 символов" required>
+                                   placeholder="17 символов" value="{{ old('vin') }}" required>
                         </div>
 
                         <!-- Цена -->
                         <div>
                             <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Цена</label>
-                            <input type="number" name="price" id="price" min="0"
+                            <input type="number" name="price" id="price" min="0" value="{{ old('price') }}"
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" required>
                         </div>
 
                         <!-- Пробег -->
                         <div>
                             <label for="mileage" class="block text-sm font-medium text-gray-700 mb-1">Пробег (км)</label>
-                            <input type="number" name="mileage" id="mileage" min="0" max="9999999"
+                            <input type="number" name="mileage" id="mileage" min="0" max="9999999" value="{{ old('mileage') }}" required
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                     </div>

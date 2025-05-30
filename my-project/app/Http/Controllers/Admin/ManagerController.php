@@ -24,6 +24,25 @@ class ManagerController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'name.required' => 'Поле "Имя" обязательно.',
+            'name.string' => 'Имя должно быть строкой.',
+            'name.max' => 'Имя не должно превышать 255 символов.',
+        
+            'email.required' => 'Поле "Email" обязательно.',
+            'email.email' => 'Введите корректный email.',
+            'email.unique' => 'Пользователь с таким email уже существует.',
+            'email.max' => 'Email не должен превышать 255 символов.',
+        
+            'phone.required' => 'Поле "Телефон" обязательно.',
+            'phone.string' => 'Телефон должен быть строкой.',
+            'phone.unique' => 'Пользователь с таким телефоном уже существует.',
+            'phone.max' => 'Телефон не должен превышать 20 символов.',
+        
+            'password.required' => 'Пароль обязателен.',
+            'password.confirmed' => 'Пароли не совпадают.',
+            'password.min' => 'Пароль должен содержать минимум 8 символов.',
+            'password.regex' => 'Пароль должен содержать хотя бы одну заглавную букву, строчную букву и цифру.',
         ]);
 
         User::create([
@@ -38,46 +57,73 @@ class ManagerController extends Controller
     }
 
     public function update(Request $request, User $manager)
-    {
-        // Валидация данных
-        $rules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $manager->id,
-            'phone' => 'required|string|max:20|unique:users,phone,' . $manager->id,
-            'password' => [
-                'nullable',
-                'string',
-                'min:8',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
-            ],
-        ];
-    
-        $request->validate($rules);
-    
-        // Подготовка данных для обновления
-        $data = $request->only(['name', 'email', 'phone']);
-    
-        // Если пароль указан — добавляем его
-        if ($request->filled('password')) {
-            $data['password'] = bcrypt($request->password);
-        }
-    
-        // Обновление пользователя
-        $manager->update($data);
-    
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'manager' => $manager
-            ]);
-        }
-    
-        return redirect()->route('admin.managers.index')->with('success', 'Менеджер успешно обновлен');
+{
+    // Валидация данных
+    $rules = [
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $manager->id,
+        'phone' => 'required|string|max:20|unique:users,phone,' . $manager->id,
+        'password' => [
+            'nullable',
+            'string',
+            'min:8',
+            'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
+        ],
+    ];
+
+    $messages = [
+        'name.required' => 'Поле "Имя" обязательно для заполнения.',
+        'name.string' => 'Поле "Имя" должно быть строкой.',
+        'name.max' => 'Поле "Имя" не должно превышать 255 символов.',
+
+        'email.required' => 'Поле "Email" обязательно для заполнения.',
+        'email.email' => 'Введите корректный email.',
+        'email.max' => 'Поле "Email" не должно превышать 255 символов.',
+        'email.unique' => 'Пользователь с таким email уже существует.',
+
+        'phone.required' => 'Поле "Телефон" обязательно для заполнения.',
+        'phone.string' => 'Поле "Телефон" должно быть строкой.',
+        'phone.max' => 'Поле "Телефон" не должно превышать 20 символов.',
+        'phone.unique' => 'Пользователь с таким телефоном уже существует.',
+
+        'password.string' => 'Пароль должен быть строкой.',
+        'password.min' => 'Пароль должен содержать минимум 8 символов.',
+        'password.regex' => 'Пароль должен содержать хотя бы одну заглавную букву, строчную букву и цифру.',
+    ];
+
+    $request->validate($rules, $messages);
+
+    // Подготовка данных для обновления
+    $data = $request->only(['name', 'email', 'phone']);
+
+    // Если пароль указан — добавляем его
+    if ($request->filled('password')) {
+        $data['password'] = bcrypt($request->password);
     }
 
-    public function destroy(User $manager)
-    {
-        $manager->delete();
-        return redirect()->route('admin.managers.index')->with('success', 'Менеджер успешно удален');
+    // Обновление пользователя
+    $manager->update($data);
+
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'manager' => $manager
+        ]);
     }
+
+    return redirect()->route('admin.managers.index')->with('success', 'Менеджер успешно обновлен');
+}
+
+public function destroy(User $manager)
+{
+    // Проверяем, есть ли у менеджера бронирования
+    if ($manager->bookings()->exists()) {
+        return back()->with('error', 'Невозможно удалить менеджера — у него есть бронирования.');
+    }
+
+    // Если бронирований нет — удаляем
+    $manager->delete();
+
+    return redirect()->route('admin.managers.index')->with('success', 'Менеджер успешно удален');
+}
 }

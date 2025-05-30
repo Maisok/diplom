@@ -236,62 +236,66 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цвет</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HEX код</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Комплектации</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сохранить</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Удалить</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($colors as $color)
-                            <tr>
-                                <form method="POST" action="{{ route('admin.colors.update') }}" class="w-full">
+                        <tr>
+                            <!-- Форма редактирования -->
+                            <form method="POST" action="{{ route('admin.colors.update') }}" class="w-full">
+                                @csrf
+                                <input type="hidden" name="color_id" value="{{ $color->id }}">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="text" name="name" value="{{ $color->name }}"
+                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span style="width: 20px; height: 20px; background-color: {{ $color->hex_code }};"
+                                          class="inline-block rounded-full"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="text" name="hex_code" value="{{ $color->hex_code }}"
+                                           maxlength="7" placeholder="#FF5733"
+                                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    @foreach ($color->equipments as $eq)
+                                        <div class="text-xs mb-1">
+                                            {{ optional($eq->generation->carModel->brand)->name }}
+                                            → {{ optional($eq->generation->carModel)->name }}
+                                            ({{ optional($eq->generation)->name }})
+                                        </div>
+                                    @endforeach
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-900">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </form>
+                    
+                            <!-- Отдельная форма удаления -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form method="POST" action="{{ route('admin.colors.delete') }}" class="inline" onsubmit="return confirm('Удалить цвет?')">
                                     @csrf
                                     <input type="hidden" name="color_id" value="{{ $color->id }}">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="text" name="name" value="{{$color->name}}"
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span style="width: 20px; height: 20px; background-color: {{ $color->hex_code }};"
-                                              class="inline-block rounded-full"></span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="text" name="hex_code" value="{{$color->hex_code }}"
-                                               maxlength="7" placeholder="#FF5733"
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
-                                        @foreach ($color->equipments as $eq)
-                                            <div class="text-xs mb-1">
-                                                {{ optional($eq->generation->carModel->brand)->name }}
-                                                → {{ optional($eq->generation->carModel)->name }}
-                                                ({{ optional($eq->generation)->name }})
-                                            </div>
-                                        @endforeach
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
-                                            <button type="submit" class="text-blue-600 hover:text-blue-900">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
-                                            <form method="POST" action="{{ route('admin.colors.delete') }}" class="inline">
-                                                @csrf
-                                                <input type="hidden" name="color_id" value="{{ $color->id }}">
-                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Удалить цвет?')">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
                                 </form>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Цветов пока нет</td>
-                            </tr>
-                        @endforelse
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Цветов пока нет</td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
             </div>

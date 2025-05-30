@@ -9,7 +9,6 @@
         <p class="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600">Управление марками, моделями и поколениями автомобилей</p>
       </div>
   
-      <!-- Alerts -->
       <div class="space-y-3 mb-6">
         @if ($errors->any())
           <div class="p-3 sm:p-4 bg-red-50 border-l-4 border-red-500 rounded shadow-sm">

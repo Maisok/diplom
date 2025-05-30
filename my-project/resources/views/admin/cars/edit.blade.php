@@ -117,7 +117,7 @@
                             <label for="mileage" class="block text-sm font-medium text-gray-700 mb-1">Пробег (км)</label>
                             <input type="number" name="mileage" id="mileage"
                                    value="{{ old('mileage', $car->mileage) }}"
-                                   min="0" max="9999999"
+                                   min="0" max="9999999" required
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                     </div>

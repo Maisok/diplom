@@ -155,13 +155,75 @@
                 </svg>
                 Добавить автомобиль
             </a>
-            <a href="{{ route('admin.cars.export.not_sold') }}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-                Экспортировать авто в продаже
-            </a>
         </div>
+
+        <!-- Блок экспорта -->
+<div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200 mt-8">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-sm sm:text-base font-medium text-gray-700">Экспорт отчета по продажам</h3>
+    </div>
+    <div class="p-4 sm:p-6">
+        <form method="GET" action="{{ route('admin.cars.export.sales-report') }}" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Марка -->
+                <div>
+                    <label for="export-brand" class="block text-sm font-medium text-gray-700 mb-1">Марка</label>
+                    <select name="brand_id" id="export-brand" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm select2">
+                        <option value="">Все марки</option>
+                        @foreach ($brands as $brand)
+                            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Модель -->
+                <div>
+                    <label for="export-model" class="block text-sm font-medium text-gray-700 mb-1">Модель</label>
+                    <select name="model_id" id="export-model" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm select2">
+                        <option value="">Все модели</option>
+                    </select>
+                </div>
+
+                <!-- Поколение -->
+                <div>
+                    <label for="export-generation" class="block text-sm font-medium text-gray-700 mb-1">Поколение</label>
+                    <select name="generation_id" id="export-generation" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm select2">
+                        <option value="">Все поколения</option>
+                    </select>
+                </div>
+
+                <!-- Комплектация -->
+                <div>
+                    <label for="export-equipment" class="block text-sm font-medium text-gray-700 mb-1">Комплектация</label>
+                    <select name="equipment_id" id="export-equipment" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm select2">
+                        <option value="">Все комплектации</option>
+                    </select>
+                </div>
+
+                <!-- Дата начала -->
+                <div>
+                    <label for="export-start-date" class="block text-sm font-medium text-gray-700 mb-1">Дата с</label>
+                    <input type="date" name="start_date" id="export-start-date" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                </div>
+
+                <!-- Дата окончания -->
+                <div>
+                    <label for="export-end-date" class="block text-sm font-medium text-gray-700 mb-1">Дата по</label>
+                    <input type="date" name="end_date" id="export-end-date" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-4">
+                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Экспортировать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
         <!-- Таблица автомобилей -->
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">

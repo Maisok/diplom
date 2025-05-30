@@ -11,6 +11,8 @@ use App\Models\CarModel;
 use App\Models\Branch;
 use App\Models\Generation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -213,8 +215,6 @@ class CarController extends Controller
             $data['color_id'] = null;
         }
     
-        // Создание авто
-        $car = Car::create($data);
     
         // Уведомление пользователям
         $equipment = Equipment::with('favoritedByUsers')->find($data['equipment_id']);
@@ -235,7 +235,7 @@ class CarController extends Controller
                 ->withErrors(['images' => 'Необходимо загрузить хотя бы одно фото'])
                 ->withInput();
         }
-        
+        $car = Car::create($data);
         $newImages = $request->file('images');
         
         // Проверяем, не больше ли 20 файлов
@@ -254,7 +254,8 @@ class CarController extends Controller
                 ]);
             }
         }
-    
+
+      
         return redirect()->route('admin.cars.index')->with('success', 'Автомобиль успешно добавлен');
     }
 
@@ -282,6 +283,7 @@ class CarController extends Controller
 
     public function update(Request $request, Car $car)
     {
+        // Валидация данных
         $data = $request->validate([
             'equipment_id' => 'required|exists:equipment,id',
             'vin' => [
@@ -310,28 +312,56 @@ class CarController extends Controller
             'new_images.*.max' => 'Фото не должно превышать 2 Мб',
         ]);
     
-        // Логика: либо color_id, либо custom_color_*
-        if ($request->filled('color_id')) {
+        // Кастомная валидация цвета (либо color_id, либо custom_color_*)
+        $validator = Validator::make($request->all(), [
+            'color_id' => 'nullable|exists:colors,id',
+            'custom_color_name' => 'nullable|string|max:50',
+            'custom_color_hex' => 'nullable|regex:/^#([A-Fa-f0-9]{6})$/i',
+        ]);
+    
+        $validator->after(function ($validator) use ($request) {
+            if (!$request->filled('color_id') &&
+                (!$request->filled('custom_color_name') || !$request->filled('custom_color_hex'))) {
+                $validator->errors()->add(
+                    'color_validation',
+                    'Необходимо выбрать цвет из списка или указать свой'
+                );
+            }
+        });
+    
+        if ($validator->fails()) {
+            throw ValidationException::withMessages($validator->errors()->get('*'));
+        }
+    
+        // Если передан пользовательский цвет — создаём его, если такого нет
+        if ($request->filled('custom_color_name') && $request->filled('custom_color_hex')) {
+            $color = Color::firstOrCreate(
+                ['name' => $request->input('custom_color_name')],
+                ['hex_code' => $request->input('custom_color_hex')]
+            );
+    
+            $data['color_id'] = $color->id;
             $data['custom_color_name'] = null;
             $data['custom_color_hex'] = null;
         } else {
-            $data['color_id'] = null;
+            $data['custom_color_name'] = null;
+            $data['custom_color_hex'] = null;
         }
     
         // Обновляем данные авто
         $car->update($data);
-
+    
+        // Загрузка новых фото
         if ($request->hasFile('new_images')) {
             $existingCount = $car->images()->count();
             $newImages = $request->file('new_images');
             $total = $existingCount + count($newImages);
-
+    
             if ($total > 20) {
                 session()->flash('warning', 'Вы загрузили больше фото, чем можно хранить. Сохранены только первые 20.');
-
-                // Ограничиваем до оставшегося количества
+    
                 $allowedImages = array_slice($newImages, 0, max(0, 20 - $existingCount));
-
+    
                 foreach ($allowedImages as $key => $image) {
                     $path = $image->store('cars', 'public');
                     $car->images()->create([
@@ -349,24 +379,24 @@ class CarController extends Controller
                 }
             }
         }
-            
+    
+        // Удаление фото
         if ($request->has('delete_images')) {
             $imagesToDelete = $car->images()
                 ->whereIn('id', $request->input('delete_images'))
                 ->get();
-
-            // Проверяем, не пытаемся ли удалить все фото
+    
             if ($car->images->count() - count($imagesToDelete) < 1) {
                 return back()->withErrors(['delete_images' => 'Невозможно удалить все изображения. Оставьте хотя бы одно.']);
             }
-
+    
             foreach ($imagesToDelete as $image) {
                 Storage::disk('public')->delete($image->path);
                 $image->delete();
             }
         }
     
-        // Изменение главного фото
+        // Смена главного фото
         if ($request->has('main_image_id')) {
             $car->images()->update(['is_main' => false]);
             $car->images()
@@ -380,11 +410,16 @@ class CarController extends Controller
     // Удаление автомобиля
     public function destroy(Car $car)
     {
+        // Проверяем, есть ли у автомобиля бронирования
+        if ($car->bookings()->exists()) {
+            return back()->with('error', 'Невозможно удалить автомобиль — он имеет бронирования.');
+        }
+    
         foreach ($car->images as $img) {
             Storage::disk('public')->delete($img->path);
             $img->delete();
         }
-
+    
         $car->delete();
         return back()->with('success', 'Автомобиль удалён');
     }

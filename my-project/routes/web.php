@@ -29,6 +29,9 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CarExportController;
 use App\Http\Controllers\BookingExportController;
 use App\Http\Controllers\Admin\AdminBookingController;
+use App\Http\Controllers\ExportController;
+use App\Exports\SalesReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
 
@@ -127,6 +130,25 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->group(function (
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
+
+    Route::get('/admin/cars/export/sales-report', function (Request $request) {
+        // Получаем все параметры из GET-запроса
+        $filters = $request->only([
+            'brand_id',
+            'model_id',
+            'generation_id',
+            'equipment_id',
+            'start_date',
+            'end_date'
+        ]);
+    
+        return Excel::download(
+            new SalesReportExport($filters),
+            'sales_report_' . now()->format('Y-m-d_H-i') . '.xlsx'
+        );
+    })->name('admin.cars.export.sales-report');
+
+Route::get('/export/bookings', [ExportController::class, 'exportBookings'])->name('export.bookings');
     Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/managers', [ManagerController::class, 'index'])->name('managers.index');

@@ -1,5 +1,4 @@
 @extends('layouts.admin')
-
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="bg-white shadow rounded-lg p-6">
@@ -56,31 +55,32 @@
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Имя</label>
                             <input type="text" id="name" name="name" required
-                                class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input type="email" id="email" name="email" required
-                                class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                         <div>
                             <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
                             <input type="text" id="phone" name="phone" required
-                                class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                         <div>
                             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
                             <input type="password" id="password" name="password" required
-                                class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                         <div>
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Подтверждение</label>
                             <input type="password" id="password_confirmation" name="password_confirmation" required
-                                class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         </div>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button type="submit"
+                                class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Добавить менеджера
                         </button>
                     </div>
@@ -106,47 +106,111 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($managers as $manager)
-                        <tr class="hover:bg-gray-50" data-id="{{ $manager->id }}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $manager->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="manager-name block text-sm font-medium text-gray-900">{{ $manager->name }}</span>
-                                <input type="text" name="name" value="{{ $manager->name }}"
-                                    class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="manager-email block text-sm text-gray-500">{{ $manager->email }}</span>
-                                <input type="email" name="email" value="{{ $manager->email }}"
-                                    class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="manager-phone block text-sm text-gray-500">{{ $manager->phone }}</span>
-                                <input type="text" name="phone" value="{{ $manager->phone }}" id="phone2"
-                                    class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="view-mode flex space-x-2">
-                                    <button class="edit-btn inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                                        Редактировать
-                                    </button>
-                                    <form action="{{ route('admin.managers.destroy', $manager) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" onclick="return confirm('Вы уверены?')"
-                                            class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                            Удалить
+                            <tr class="hover:bg-gray-50" data-id="{{ $manager->id }}">
+                                <!-- ID -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 manager-id">{{ $manager->id }}</td>
+
+                                <!-- Имя -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="manager-name block text-sm font-medium text-gray-900">{{ $manager->name }}</span>
+                                    <input type="text" name="name" value="{{ $manager->name }}"
+                                           class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                </td>
+
+                                <!-- Email -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="manager-email block text-sm text-gray-500">{{ $manager->email }}</span>
+                                    <input type="email" name="email" value="{{ $manager->email }}"
+                                           class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                </td>
+
+                                <!-- Телефон -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="manager-phone block text-sm text-gray-500">{{ $manager->phone }}</span>
+                                    <input type="text" name="phone" value="{{ $manager->phone }}"
+                                           class="edit-field hidden mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                </td>
+
+                                <!-- Действия -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="view-mode flex space-x-2">
+                                        <button class="edit-btn inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                            Редактировать
                                         </button>
-                                    </form>
-                                </div>
-                                <div class="edit-mode hidden flex space-x-2">
-                                    <button class="save-btn inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        Сохранить
-                                    </button>
-                                    <button class="cancel-btn inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                        Отмена
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                                        <form action="{{ route('admin.managers.destroy', $manager) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Вы уверены?')"
+                                                    class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Форма редактирования -->
+                                    <div class="edit-form hidden">
+                                        <form method="POST" action="{{ route('admin.managers.update', $manager) }}">
+                                            @csrf
+                                            @method('PUT')
+
+                                            <input type="hidden" name="manager_id" value="{{ $manager->id }}">
+
+                                            <div class="mb-2">
+                                                <input type="text" name="name" value="{{ $manager->name }}"
+                                                       placeholder="Имя"
+                                                       class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                                @error("name")
+                                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <input type="email" name="email" value="{{ $manager->email }}"
+                                                       placeholder="Email"
+                                                       class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                                @error("email")
+                                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <input type="text" name="phone" value="{{ $manager->phone }}"
+                                                       placeholder="Телефон"
+                                                       class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                                @error("phone")
+                                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <input type="password" name="password"
+                                                       placeholder="Новый пароль (необязательно)"
+                                                       class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                                @error("password")
+                                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <input type="password" name="password_confirmation"
+                                                       placeholder="Подтвердите пароль"
+                                                       class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                            </div>
+
+                                            <div class="flex space-x-2">
+                                                <button type="submit"
+                                                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    Сохранить
+                                                </button>
+                                                <button type="button"
+                                                        class="cancel-btn inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                                    Отмена
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -154,182 +218,46 @@
         </div>
     </div>
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Обработка кнопки редактирования
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const row = this.closest('tr');
-            
-            // Переключаем режимы отображения
-            row.querySelectorAll('.manager-name, .manager-email, .manager-phone').forEach(el => {
-                el.classList.add('hidden');
-            });
-            
-            row.querySelectorAll('.edit-field').forEach(el => {
-                el.classList.remove('hidden');
-            });
-            
-            // Переключаем кнопки
-            row.querySelector('.view-mode').classList.add('hidden');
-            row.querySelector('.edit-mode').classList.remove('hidden');
-        });
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const editForm = row.querySelector('.edit-form');
     
-    // Обработка кнопки отмены
-    document.querySelectorAll('.cancel-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const row = this.closest('tr');
-            
-            // Возвращаем исходные значения
-            const name = row.querySelector('.manager-name').textContent;
-            const email = row.querySelector('.manager-email').textContent;
-            const phone = row.querySelector('.manager-phone').textContent;
-            
-            row.querySelector('input[name="name"]').value = name;
-            row.querySelector('input[name="email"]').value = email;
-            row.querySelector('input[name="phone"]').value = phone;
-            
-            // Переключаем режимы отображения
-            row.querySelectorAll('.manager-name, .manager-email, .manager-phone').forEach(el => {
-                el.classList.remove('hidden');
+                // Скрываем исходные данные
+                row.querySelectorAll('.manager-name, .manager-email, .manager-phone').forEach(el => el.classList.add('hidden'));
+                row.querySelector('.view-mode').classList.add('hidden');
+                editForm.classList.remove('hidden');
             });
-            
-            row.querySelectorAll('.edit-field').forEach(el => {
-                el.classList.add('hidden');
-            });
-            
-            // Переключаем кнопки
-            row.querySelector('.view-mode').classList.remove('hidden');
-            row.querySelector('.edit-mode').classList.add('hidden');
         });
-    });
     
-    // Обработка кнопки сохранения
-    document.querySelectorAll('.save-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const row = this.closest('tr');
-            const id = row.getAttribute('data-id');
-            
-            const data = {
-                name: row.querySelector('input[name="name"]').value,
-                email: row.querySelector('input[name="email"]').value,
-                phone: row.querySelector('input[name="phone"]').value,
-                _token: '{{ csrf_token() }}',
-                _method: 'PUT'
-            };
-            
-            fetch(`/admin/managers/${id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Обновляем текстовые значения
-                    row.querySelector('.manager-name').textContent = data.manager.name;
-                    row.querySelector('.manager-email').textContent = data.manager.email;
-                    row.querySelector('.manager-phone').textContent = data.manager.phone;
-                    
-                    // Показываем уведомление
-                    showNotification('Данные менеджера успешно обновлены', 'success');
-                    
-                    // Возвращаем в режим просмотра
-                    row.querySelector('.cancel-btn').click();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Произошла ошибка при обновлении данных', 'error');
+        document.querySelectorAll('.cancel-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const row = this.closest('tr');
+                const editForm = row.querySelector('.edit-form');
+    
+                // Восстанавливаем отображение
+                row.querySelectorAll('.manager-name, .manager-email, .manager-phone').forEach(el => el.classList.remove('hidden'));
+                row.querySelector('.view-mode').classList.remove('hidden');
+                editForm.classList.add('hidden');
+            });
+        });
+    
+        // Форматирование телефона (опционально)
+        document.querySelectorAll('input[name="phone"]').forEach(input => {
+            input.addEventListener("input", function (e) {
+                let input = this.value.replace(/\D/g, '');
+                let formatted = '';
+                if (input.length > 0) formatted = '8 ';
+                if (input.length > 1) formatted += input.substring(1, 4);
+                if (input.length > 4) formatted += ' ' + input.substring(4, 7);
+                if (input.length > 7) formatted += ' ' + input.substring(7, 9);
+                if (input.length > 9) formatted += ' ' + input.substring(9, 11);
+                this.value = formatted;
             });
         });
     });
-    
-    // Функция для показа уведомлений
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg text-white ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        }`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
+    </script>
 
-    // Форматирование телефона
-    const phoneInput = document.getElementById('phone');
-    const phoneInput2 = document.getElementById('phone2');
-
-    if (phoneInput) {
-        phoneInput.addEventListener("input", function (e) {
-            let input = this.value.replace(/\D/g, '');
-            let formatted = '';
-
-            if (input.length > 0) {
-                formatted = '8 ';
-            }
-
-            if (input.length > 1) {
-                formatted += input.substring(1, 4);
-            }
-
-            if (input.length > 4) {
-                formatted += ' ' + input.substring(4, 7);
-            }
-
-            if (input.length > 7) {
-                formatted += ' ' + input.substring(7, 9);
-            }
-
-            if (input.length > 9) {
-                formatted += ' ' + input.substring(9, 11);
-            }
-
-            this.value = formatted;
-        });
-    }
-
-    if (phoneInput2) {
-        phoneInput2.addEventListener("input", function (e) {
-            let input = this.value.replace(/\D/g, '');
-            let formatted = '';
-
-            if (input.length > 0) {
-                formatted = '8 ';
-            }
-
-            if (input.length > 1) {
-                formatted += input.substring(1, 4);
-            }
-
-            if (input.length > 4) {
-                formatted += ' ' + input.substring(4, 7);
-            }
-
-            if (input.length > 7) {
-                formatted += ' ' + input.substring(7, 9);
-            }
-
-            if (input.length > 9) {
-                formatted += ' ' + input.substring(9, 11);
-            }
-
-            this.value = formatted;
-        });
-    }
-});
-</script>
 @endsection

@@ -63,119 +63,138 @@ class ManagerBookingController extends Controller
         return view('manager.bookings.edit', compact('booking'));
     }
 
-        public function update(Request $request, Booking $booking)
-        {
-            $user = auth()->user();
-
-            if ($booking->manager_id && $booking->manager_id !== $user->id) {
-                abort(403, 'Вы не можете редактировать это бронирование');
-            }
+    public function update(Request $request, Booking $booking)
+    {
+        $user = auth()->user();
     
-            $now = \Carbon\Carbon::now();
-            $maxDate = $now->copy()->addDays(7);
-
-            $validated = $request->validate([
-                'status' => 'required|in:pending,confirmed,rejected,completed',
-                'appointment_date' => [
-                    'required',
-                    'date',
-                    "after_or_equal:" . $now->format('Y-m-d'),
-                    "before_or_equal:" . $maxDate->format('Y-m-d')
-                ],
-                'manager_comment' => 'nullable|string|max:1000',
-            ]);
-
-            $oldStatus = $booking->status;
-            $newStatus = $validated['status'];
-            $carName = $booking->car?->equipment?->generation?->carModel?->name ?? 'автомобиль';
-
-            // --- ОТПРАВКА УВЕДОМЛЕНИЯ ---
-            $message = '';
-            $type = '';
-
-            switch ($newStatus) {
-                case 'confirmed':
-                    case 'completed':
-                        $message = "Ваше бронирование автомобиля {$carName} было подтверждено.";
-                        $type = 'booking_confirmed';
-                    
-                        // Отменяем другие активные брони
-                        Booking::where('car_id', $booking->car_id)
-                            ->where('id', '!=', $booking->id)
-                            ->whereIn('status', ['pending', 'confirmed'])
-                            ->update([
-                                'status' => 'rejected',
-                                'manager_comment' => 'Автомобиль продан другому клиенту'
-                            ]);
-                    
-                        $booking->car->update(['is_sold' => true]);
-                        break;
-                    
-                    case 'rejected':
-                        $message = "Ваше бронирование автомобиля {$carName} было отклонено.";
-                    
-                        if (!empty($validated['manager_comment'])) {
-                            $message .= " Комментарий: {$validated['manager_comment']}";
-                        }
-                    
-                        $type = 'booking_rejected';
-                    
-                        // Возвращаем авто в продажу
-                        $booking->car->update(['is_sold' => false]);
-                        break;
-                    
-                    case 'pending':
-                        $message = "Ваше бронирование автомобиля {$carName} переведено в статус ожидания.";
-                        if (!empty($validated['manager_comment'])) {
-                            $message .= " Комментарий: {$validated['manager_comment']}";
-                        }
-                    
-                        $type = 'booking_pending';
-                    
-                        // Возвращаем авто в продажу
-                        $booking->car->update(['is_sold' => false]);
-                        break;
-
-                default:
-                    $changes = [];
-
-                    if ($booking->appointment_date != $validated['appointment_date']) {
-                        $changes[] = "дата встречи изменена на {$validated['appointment_date']}";
-                    }
-
-                    if ($booking->status != $validated['status']) {
-                        $changes[] = "статус изменён на '{$validated['status']}'";
-                    }
-
-                    if (!empty($validated['manager_comment']) && $booking->manager_comment != $validated['manager_comment']) {
-                        $changes[] = "оставлен комментарий: \"{$validated['manager_comment']}\"";
-                    }
-
-                    if (empty($changes)) {
-                        break; // Нет изменений — не отправляем уведомление
-                    }
-
+        if ($booking->manager_id && $booking->manager_id !== $user->id) {
+            abort(403, 'Вы не можете редактировать это бронирование');
+        }
+    
+        $now = \Carbon\Carbon::now();
+        $maxDate = $now->copy()->addDays(7);
+    
+        // Определяем правила валидации
+        $rules = [
+            'status' => 'required|in:pending,confirmed,rejected,completed',
+            'manager_comment' => 'nullable|string|max:1000',
+        ];
+    
+        // Добавляем appointment_date только если статус НЕ rejected и НЕ pending
+        if (!in_array($request->input('status'), ['rejected', 'pending'])) {
+            $rules['appointment_date'] = [
+                'required',
+                'date',
+                "after_or_equal:" . $now->format('Y-m-d'),
+                "before_or_equal:" . $maxDate->format('Y-m-d')
+            ];
+        } else {
+            $rules['appointment_date'] = [
+                'nullable',
+                'date',
+                "after_or_equal:" . $now->format('Y-m-d'),
+                "before_or_equal:" . $maxDate->format('Y-m-d')
+            ];
+        }
+    
+        $validated = $request->validate($rules, [
+            'status.required' => 'Поле "Статус" обязательно для заполнения',
+            'status.in' => 'Недопустимое значение статуса. Допустимые значения: ожидание, подтверждено, отклонено, завершено',
+            
+            'manager_comment.string' => 'Комментарий менеджера должен быть строкой',
+            'manager_comment.max' => 'Комментарий не может превышать 1000 символов',
+    
+            'appointment_date.required' => 'Дата встречи обязательна, так как бронирование подтверждено или завершено',
+            'appointment_date.date' => 'Некорректный формат даты встречи',
+            'appointment_date.after_or_equal' => 'Дата встречи не может быть раньше сегодняшней',
+            'appointment_date.before_or_equal' => 'Дата встречи не может быть позже чем через 7 дней',
+        ]);
+    
+        $oldStatus = $booking->status;
+        $newStatus = $validated['status'];
+        $carName = $booking->car?->equipment?->generation?->carModel?->name ?? 'автомобиль';
+    
+        // --- ОТПРАВКА УВЕДОМЛЕНИЯ ---
+        $message = '';
+        $type = '';
+    
+        switch ($newStatus) {
+            case 'confirmed':
+            case 'completed':
+                $message = "Ваше бронирование автомобиля {$carName} было подтверждено.";
+                $type = 'booking_confirmed';
+    
+                // Отменяем другие активные брони
+                Booking::where('car_id', $booking->car_id)
+                    ->where('id', '!=', $booking->id)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->update([
+                        'status' => 'rejected',
+                        'manager_comment' => 'Автомобиль продан другому клиенту'
+                    ]);
+    
+                $booking->car->update(['is_sold' => true]);
+                break;
+    
+            case 'rejected':
+                $message = "Ваше бронирование автомобиля {$carName} было отклонено.";
+    
+                if (!empty($validated['manager_comment'])) {
+                    $message .= " Комментарий: {$validated['manager_comment']}";
+                }
+    
+                $type = 'booking_rejected';
+                $booking->car->update(['is_sold' => false]);
+                break;
+    
+            case 'pending':
+                $message = "Ваше бронирование автомобиля {$carName} переведено в статус ожидания.";
+                if (!empty($validated['manager_comment'])) {
+                    $message .= " Комментарий: {$validated['manager_comment']}";
+                }
+                $type = 'booking_pending';
+                $booking->car->update(['is_sold' => false]);
+                break;
+    
+            default:
+                $changes = [];
+    
+                if ($booking->appointment_date != $validated['appointment_date']) {
+                    $changes[] = "дата встречи изменена на {$validated['appointment_date']}";
+                }
+    
+                if ($booking->status != $validated['status']) {
+                    $changes[] = "статус изменён на '{$validated['status']}'";
+                }
+    
+                if (!empty($validated['manager_comment']) && $booking->manager_comment != $validated['manager_comment']) {
+                    $changes[] = "оставлен комментарий: \"{$validated['manager_comment']}\"";
+                }
+    
+                if (!empty($changes)) {
                     $message = "Изменения по вашему бронированию автомобиля {$carName}: " . implode(', ', $changes) . '.';
                     $type = 'booking_updated';
-                    break;
-            }
-
-            if (!empty($message)) {
-                Notification::create([
-                    'user_id' => $booking->user_id,
-                    'car_id' => $booking->car_id,
-                    'type' => $type,
-                    'message' => $message,
-                    'url' => route('bookings.show', $booking),
-                ]);
-            }
-
-            // --- ОБНОВЛЯЕМ БРОНИРОВАНИЕ ---
-            $booking->update($validated);
-
-            return redirect()->route('manager.bookings.index')
-                ->with('success', 'Бронирование успешно обновлено');
+                }
+                break;
         }
+    
+        if (!empty($message)) {
+            Notification::create([
+                'user_id' => $booking->user_id,
+                'car_id' => $booking->car_id,
+                'type' => $type,
+                'message' => $message,
+                'url' => route('bookings.show', $booking),
+            ]);
+        }
+    
+        // --- ОБНОВЛЯЕМ БРОНИРОВАНИЕ ---
+        $booking->update($validated);
+    
+        return redirect()->route('manager.bookings.index')
+            ->with('success', 'Бронирование успешно обновлено');
+    }
+
     public function destroy(Booking $booking)
     {
         try {

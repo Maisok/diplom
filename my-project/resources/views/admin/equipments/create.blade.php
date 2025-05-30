@@ -217,12 +217,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-gray-500 mb-1">Название</label>
-                            <input type="text" name="new_colors[0][name]" placeholder="Название" 
+                            <input type="text" name="new_colors[0][name]" placeholder="Название" maxlength="50" required
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-500 mb-1">HEX код</label>
-                            <input type="text" name="new_colors[0][hex]" placeholder="#FF5733" 
+                            <input type="text" name="new_colors[0][hex]" placeholder="#FF5733" maxlength="7" minlength="7" required
                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
                         </div>
                         <div class="flex items-end">
@@ -312,12 +312,12 @@ $(document).ready(function () {
         div.innerHTML = `
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Название</label>
-                <input type="text" name="new_colors[${colorIndex}][name]" placeholder="Название" 
+                <input type="text" name="new_colors[${colorIndex}][name]" placeholder="Название" maxlength="50" required
                        class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">HEX код</label>
-                <input type="text" name="new_colors[${colorIndex}][hex]" placeholder="#FF5733" 
+                <input type="text" name="new_colors[${colorIndex}][hex]" placeholder="#FF5733" maxlength="7" minlength="7" required
                        class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
             </div>
             <div class="flex items-end">
