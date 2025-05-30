@@ -8,7 +8,7 @@ class Booking extends Model
 {
     protected $fillable = [
         'user_id', 'car_id', 'booking_date', 'appointment_date', 
-        'status', 'manager_comment'
+        'status', 'manager_comment', 'manager_id'
     ];
 
     protected $casts = [
@@ -24,5 +24,10 @@ class Booking extends Model
     public function car()
     {
         return $this->belongsTo(Car::class);
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'manager_id');
     }
 }

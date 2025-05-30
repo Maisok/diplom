@@ -239,7 +239,7 @@
                                                     @case('pending') Ожидание @break
                                                     @case('confirmed') Подтверждено @break
                                                     @case('rejected') Отклонено @break
-                                                    @case('cancelled') Отменено @break
+                                                    @case('completed') Выполнено @break
                                                     @default Статус неизвестен
                                                 @endswitch
                                             </span>

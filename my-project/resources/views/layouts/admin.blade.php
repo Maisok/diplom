@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Админка</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite('resources/css/app.css')
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -32,6 +33,7 @@
             <a class="p-2 text-black hover:underline" href="{{ route('admin.equipments.index') }}">Комплектации</a>
             <a class="p-2 text-black hover:underline" href="{{ route('admin.cars.index') }}">Авто</a>
             <a class="p-2 text-black hover:underline" href="{{ route('admin.managers.index') }}">Управление менеджерами</a>
+            <a class="p-2 text-black hover:underline" href="{{ route('admin.bookings.index') }}">Управление бронированиями</a>
             <a class="p-2 text-black hover:underline" href="{{ route('dashboard') }}">Личный кабинет</a>
         </div>
     
@@ -42,6 +44,7 @@
             <a class="p-2 text-black hover:bg-gray-200 rounded" href="{{ route('admin.equipments.index') }}">Комплектации</a>
             <a class="p-2 text-black hover:bg-gray-200 rounded" href="{{ route('admin.cars.index') }}">Авто</a>
             <a class="p-2 text-black hover:bg-gray-200 rounded" href="{{ route('admin.managers.index') }}">Управление менеджерами</a>
+            <a class="p-2 text-black hover:underline" href="{{ route('admin.bookings.index') }}">Управление бронированиями</a>
             <a class="p-2 text-black hover:bg-gray-200 rounded" href="{{ route('dashboard') }}">Личный кабинет</a>
         </div>
     </nav>

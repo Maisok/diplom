@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class Equipment extends Model
 {
     protected $fillable = [
-        'generation_id', 'body_type_id', 'engine_type_id', 'engine_name', 
+        'name','generation_id', 'body_type_id', 'engine_type_id', 'engine_name', 
         'engine_volume', 'engine_power', 'transmission_type_id', 
         'transmission_name', 'drive_type_id', 'country_id', 'description',
         'weight', 'load_capacity', 'seats', 'fuel_consumption', 

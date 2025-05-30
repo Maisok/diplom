@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use App\Models\Brand;
 use App\Models\Equipment;
 use App\Models\Color;
+use App\Models\CarModel;
 use App\Models\Branch;
+use App\Models\Generation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,62 +20,124 @@ class CarController extends Controller
 {
     // Список всех машин
     public function index(Request $request)
-{
-    // Получаем запрос от пользователя
-    $search = $request->input('search');
-
-    // Базовый запрос с eager loading
-    $query = Car::with(['equipment.generation.carModel.brand', 'branch', 'color']);
-
-    // Поиск
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            // По VIN
-            $q->orWhere('vin', 'like', "%$search%")
-              ->orWhere('price', 'like', "%$search%")
-              ->orWhere('mileage', 'like', "%$search%");
-
-            // По марке, модели, поколению через equipment
-            $q->orWhereHas('equipment.generation.carModel.brand', function ($brandQuery) use ($search) {
-                $brandQuery->where('name', 'like', "%$search%");
+    {
+        // Базовый запрос
+        $query = Car::with([
+            'equipment.generation.carModel.brand',
+            'branch', 
+            'color'
+        ]);
+    
+        // Обычный поиск
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->orWhere('vin', 'like', "%$search%")
+                  ->orWhere('price', 'like', "%$search%")
+                  ->orWhere('mileage', 'like', "%$search%");
+    
+                $q->orWhereHas('equipment.generation.carModel.brand', function ($brandQuery) use ($search) {
+                    $brandQuery->where('brands.name', 'like', "%$search%");
+                });
+                $q->orWhereHas('equipment.generation.carModel', function ($modelQuery) use ($search) {
+                    $modelQuery->where('car_models.name', 'like', "%$search%");
+                });
+                $q->orWhereHas('equipment.generation', function ($genQuery) use ($search) {
+                    $genQuery->where('generations.name', 'like', "%$search%");
+                });
             });
-            $q->orWhereHas('equipment.generation.carModel', function ($modelQuery) use ($search) {
-                $modelQuery->where('name', 'like', "%$search%");
+        }
+    
+        // Фильтр по марке
+        if ($request->filled('brand_id')) {
+            $query->whereHas('equipment.generation.carModel', function ($q) use ($request) {
+                $q->where('brand_id', $request->input('brand_id'));
             });
-            $q->orWhereHas('equipment.generation', function ($genQuery) use ($search) {
-                $genQuery->where('name', 'like', "%$search%");
+        }
+    
+        // Фильтр по модели
+        if ($request->filled('model_id')) {
+            $query->whereHas('equipment.generation', function ($q) use ($request) {
+                $q->where('car_model_id', $request->input('model_id'));
             });
-        });
+        }
+    
+        // Фильтр по поколению
+        if ($request->filled('generation_id')) {
+            $query->whereHas('equipment', function ($q) use ($request) {
+                $q->where('generation_id', $request->input('generation_id'));
+            });
+        }
+    
+        // Сортировка
+        switch ($request->input('sort')) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'mileage_asc':
+                $query->orderBy('mileage', 'asc');
+                break;
+            case 'mileage_desc':
+                $query->orderBy('mileage', 'desc');
+                break;
+            case 'year_asc':
+                $query->orderBy('year', 'asc');
+                break;
+            case 'year_desc':
+                $query->orderBy('year', 'desc');
+                break;
+            default:
+                $query->latest();
+        }
+    
+        // Получаем данные
+        $cars = $query->paginate(10)->appends($request->except('page'));
+    
+        // Для Select2
+        $brands = Brand::all();
+        $models = collect(); // по умолчанию пустые
+        $generations = collect();
+    
+        // Если выбран бренд → загрузи модели
+        if ($request->filled('brand_id')) {
+            $models = CarModel::where('brand_id', $request->input('brand_id'))->get();
+        }
+    
+        // Если выбрана модель → загрузи поколения
+        if ($request->filled('model_id')) {
+            $generations = Generation::where('car_model_id', $request->input('model_id'))->get();
+        }
+    
+        return view('admin.cars.index', compact('cars', 'brands', 'models', 'generations'));
     }
-
-    // Пагинация
-    $cars = $query->paginate(10)->appends(['search' => $search]);
-
-    return view('admin.cars.index', compact('cars'));
-}
 
     // Форма создания авто
     public function create()
     {
-        $equipments = Equipment::with(['generation.carModel.brand'])->get();
-        $colors = Color::all();
-        $branches = Branch::all();
-        return view('admin.cars.create', compact('equipments', 'colors', 'branches'));
+        $brands = Brand::all(); // Все марки
+        $colors = Color::all(); // Все цвета
+        $branches = Branch::all(); // Все филиалы
+    
+        return view('admin.cars.create', compact('brands', 'colors', 'branches'));
     }
 
-    // Сохранение новой машины
     public function store(Request $request)
     {
+        // Основная валидация
         $data = $request->validate([
             'equipment_id' => [
                 'required',
                 'exists:equipment,id'
             ],
+
             'vin' => [
                 'required',
                 'string',
                 'size:17',
-                'unique:cars,vin'
+                Rule::unique('cars', 'vin'), 
             ],
             'mileage' => [
                 'nullable',
@@ -117,22 +182,28 @@ class CarController extends Controller
         ], [
             'vin.required' => 'VIN обязателен для заполнения',
             'vin.size' => 'VIN должен содержать ровно 17 символов',
-            'vin.unique' => 'VIN должен быть уникальным',
+            'vin.unique' => 'VIN уже используется',
             'equipment_id.required' => 'Комплектация обязательна',
+            'equipment_id.exists' => 'Выбранная комплектация не существует',
             'price.required' => 'Цена обязательна',
             'price.numeric' => 'Введите корректную цену',
             'price.min' => 'Цена не может быть отрицательной',
             'mileage.integer' => 'Пробег должен быть числом',
             'mileage.max' => 'Пробег слишком большой',
+            'description.string' => 'Описание должно быть строкой',
+            'description.max' => 'Описание не должно превышать 1000 символов',
+            'branch_id.required' => 'Филиал обязателен',
+            'branch_id.exists' => 'Выбранный филиал не существует',
+            'color_id.exists' => 'Выбранный цвет не существует',
+            'custom_color_name.string' => 'Название цвета должно быть строкой',
             'custom_color_name.max' => 'Название цвета не должно превышать 50 символов',
             'custom_color_hex.regex' => 'HEX-код должен быть в формате #FF5733',
             'images.*.image' => 'Файл должен быть изображением',
-            'images.*.mimes' => 'Поддерживаются только форматы jpeg, png, jpg, gif, svg',
-            'images.*.max' => 'Размер файла не должен превышать 2 Мб',
-            'description.max' => 'Описание не должно превышать 1000 символов',
+            'images.*.mimes' => 'Поддерживаются только форматы jpeg, png, jpg, gif, svg, webp',
+            'images.*.max' => 'Размер файла не должен превышать 2 МБ',
         ]);
     
-        // Проверка: либо выбран color_id, либо задан свой цвет
+        // Проверка: либо выбран color_id, либо указан свой цвет
         if (!$request->filled('color_id') && !($request->filled('custom_color_name') || $request->filled('custom_color_hex'))) {
             return back()->withErrors(['color_id' => 'Выберите цвет из списка или укажите свой'])->withInput();
         }
@@ -142,30 +213,44 @@ class CarController extends Controller
             $data['color_id'] = null;
         }
     
+        // Создание авто
         $car = Car::create($data);
-
-        // Проверяем, есть ли пользователи, у которых эта комплектация в избранном
-        $equipment = Equipment::with('favoritedByUsers')->find($data['equipment_id']);
     
+        // Уведомление пользователям
+        $equipment = Equipment::with('favoritedByUsers')->find($data['equipment_id']);
         if ($equipment && $equipment->favoritedByUsers->isNotEmpty()) {
             foreach ($equipment->favoritedByUsers as $user) {
-                // Создаём уведомление
                 $user->notifications()->create([
                     'car_id' => $car->id,
                     'type' => 'favorite_car_available',
                     'message' => "Появился в продаже автомобиль {$car->full_name}",
-                    'url' => route('cars.show', $car->id), // Добавляем URL
+                    'url' => route('cars.show', $car->id),
                 ]);
             }
         }
     
-        // Загрузка изображений
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $key => $image) {
+
+        if (!$request->hasFile('images')) {
+            return back()
+                ->withErrors(['images' => 'Необходимо загрузить хотя бы одно фото'])
+                ->withInput();
+        }
+        
+        $newImages = $request->file('images');
+        
+        // Проверяем, не больше ли 20 файлов
+        $allowedImages = array_slice($newImages, 0, 20);
+        
+        if (count($newImages) > 20) {
+            session()->flash('warning', 'Загружено более 20 фото. Сохранены только первые 20.');
+        }
+        
+        if (!empty($allowedImages)) {
+            foreach ($allowedImages as $key => $image) {
                 $path = $image->store('cars', 'public');
                 $car->images()->create([
                     'path' => $path,
-                    'is_main' => $key === 0,
+                    'is_main' => $key === 0, // первое фото — главное
                 ]);
             }
         }
@@ -176,10 +261,23 @@ class CarController extends Controller
     // Форма редактирования авто
     public function edit(Car $car)
     {
+        // Загружаем связи
         $car->load(['equipment.generation.carModel.brand', 'branch', 'color']);
-        $equipments = Equipment::with(['generation.carModel.brand'])->get();
+    
+        // Получаем ID связанных сущностей
+        $brandId = optional($car->equipment->generation->carModel->brand)->id;
+        $modelId = optional($car->equipment->generation->carModel)->id;
+        $generationId = optional($car->equipment->generation)->id;
+        $equipmentId = optional($car->equipment)->id;
+    
+        // Все справочники
+        $brands = Brand::all();
+        $colors = Color::all();
         $branches = Branch::all();
-        return view('admin.cars.edit', compact('car', 'equipments', 'branches'));
+    
+        return view('admin.cars.edit', compact(
+            'car', 'brands', 'colors', 'branches', 'brandId', 'modelId', 'generationId', 'equipmentId'
+        ));
     }
 
     public function update(Request $request, Car $car)
@@ -222,18 +320,36 @@ class CarController extends Controller
     
         // Обновляем данные авто
         $car->update($data);
-    
-        // Загрузка новых изображений
+
         if ($request->hasFile('new_images')) {
-            foreach ($request->file('new_images') as $key => $image) {
-                $path = $image->store('cars', 'public');
-                $car->images()->create([
-                    'path' => $path,
-                    'is_main' => $car->images()->count() === 0 && $key === 0, // Если это первое фото, то оно главная
-                ]);
+            $existingCount = $car->images()->count();
+            $newImages = $request->file('new_images');
+            $total = $existingCount + count($newImages);
+
+            if ($total > 20) {
+                session()->flash('warning', 'Вы загрузили больше фото, чем можно хранить. Сохранены только первые 20.');
+
+                // Ограничиваем до оставшегося количества
+                $allowedImages = array_slice($newImages, 0, max(0, 20 - $existingCount));
+
+                foreach ($allowedImages as $key => $image) {
+                    $path = $image->store('cars', 'public');
+                    $car->images()->create([
+                        'path' => $path,
+                        'is_main' => $existingCount === 0 && $key === 0 ? true : false,
+                    ]);
+                }
+            } else {
+                foreach ($newImages as $key => $image) {
+                    $path = $image->store('cars', 'public');
+                    $car->images()->create([
+                        'path' => $path,
+                        'is_main' => false,
+                    ]);
+                }
             }
         }
-    
+            
         if ($request->has('delete_images')) {
             $imagesToDelete = $car->images()
                 ->whereIn('id', $request->input('delete_images'))

@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^6.7.2",
+        "select2": "^4.1.0-rc.0",
         "three": "^0.176.0",
         "three-gltf-loader": "^1.111.0",
         "three-orbitcontrols": "^2.110.2"

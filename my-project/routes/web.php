@@ -10,6 +10,7 @@ use App\Models\CarColor;
 use App\Models\Brand;
 use App\Models\Branch;
 use App\Models\Generation;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CarController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\CatalogController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CarExportController;
 use App\Http\Controllers\BookingExportController;
+use App\Http\Controllers\Admin\AdminBookingController;
 
 Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
 
@@ -121,6 +123,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->group(function (
     Route::put('/bookings/{booking}', [ManagerBookingController::class, 'update'])->name('manager.bookings.update');
     Route::delete('/bookings/{booking}', [ManagerBookingController::class, 'destroy'])->name('manager.bookings.destroy');
     Route::get('/bookings/export', [BookingExportController::class, 'export'])->name('bookings.export');
+    Route::post('/bookings/{booking}/assign', [ManagerBookingController::class, 'assignToManager'])->name('manager.bookings.assign');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -130,20 +133,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/managers', [ManagerController::class, 'store'])->name('managers.store');
         Route::put('/managers/{manager}', [ManagerController::class, 'update'])->name('managers.update');
         Route::delete('/managers/{manager}', [ManagerController::class, 'destroy'])->name('managers.destroy');
-
-        Route::get('/car-structure', [CarStructureController::class, 'index'])->name('car-structure.index');
-    
-        Route::post('/brands', [CarStructureController::class, 'storeBrand'])->name('brands.store');
-        Route::put('/brands/{brand}', [CarStructureController::class, 'updateBrand'])->name('brands.update');
-        Route::delete('/brands/{brand}', [CarStructureController::class, 'destroyBrand'])->name('brands.destroy');
-    
-        Route::post('/models', [CarStructureController::class, 'storeModel'])->name('models.store');
-        Route::put('/models/{carModel}', [CarStructureController::class, 'updateModel'])->name('models.update');
-        Route::delete('/models/{carModel}', [CarStructureController::class, 'destroyModel'])->name('models.destroy');
-    
-        Route::post('/generations', [CarStructureController::class, 'storeGeneration'])->name('generations.store');
-        Route::put('/generations/{generation}', [CarStructureController::class, 'updateGeneration'])->name('generations.update');
-        Route::delete('/generations/{generation}', [CarStructureController::class, 'destroyGeneration'])->name('generations.destroy');
     
         Route::get('/cars', [CarController::class, 'index'])->name('cars.index');
         Route::get('/cars/create', [CarController::class, 'create'])->name('cars.create');
@@ -187,12 +176,90 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::delete('/equipments/{equipment}/colors/{color}', [EquipmentController::class, 'detachColor'])->name('equipment.colors.detach');
         Route::get('/cars/export/not-sold', [CarExportController::class, 'exportNotSold'])->name('cars.export.not_sold');
     });
+
+    Route::get('/bookings', [AdminBookingController::class, 'index'])->name('admin.bookings.index');
+    Route::get('/bookings/{booking}/edit-manager', [AdminBookingController::class, 'editManager'])->name('admin.bookings.edit-manager');
+    Route::put('/bookings/{booking}/edit-manager', [AdminBookingController::class, 'updateManager'])->name('admin.bookings.update-manager');
+
+
+
     Route::prefix('colors')->group(function () {
         Route::post('/update', [EquipmentController::class, 'updateColor'])->name('admin.colors.update');
         Route::post('/delete', [EquipmentController::class, 'deleteColor'])->name('admin.colors.delete');
     });
-});
 
+    Route::get('/api/brand/{brandId}/models', function (\App\Models\Brand $brandId) {
+        return response()->json($brandId->models);
+    });
+    
+    // Получить поколения по модели
+    Route::get('/api/model/{modelId}/generations', function (\App\Models\CarModel $modelId) {
+        return response()->json($modelId->generations);
+    });
+
+    Route::get('/api/brand/{brandId}/models', function (\App\Models\Brand $brandId) {
+        return response()->json($brandId->models);
+    });
+    
+    Route::get('/api/model/{modelId}/generations', function (\App\Models\CarModel $modelId) {
+        return response()->json($modelId->generations);
+    });
+
+    Route::get('/car-structure', [CarStructureController::class, 'index'])->name('admin.car-structure.index');
+
+    Route::get('/api/model', [CarStructureController::class, 'getModelById']);
+    // routes/api.php
+    Route::get('/api/generation', [CarStructureController::class, 'getGenerationById']);
+    // API для динамических селектов
+    Route::get('/api/brands', [CarStructureController::class, 'getAllBrands']);
+    Route::get('/api/models', [CarStructureController::class, 'getModelsByBrand']);
+    Route::get('/api/generations', [CarStructureController::class, 'getGenerationsByModel']);
+
+    // Для селектов (все элементы сразу)
+    Route::get('/api/all/models', [CarStructureController::class, 'getAllModels']);
+    Route::get('/api/all/generations', [CarStructureController::class, 'getAllGenerations']);
+
+    // Для дерева (с пагинацией)
+    Route::get('/api/paginated/models', [CarStructureController::class, 'getPaginatedModels']);
+    Route::get('/api/paginated/generations', [CarStructureController::class, 'getPaginatedGenerations']);
+
+    // API для Select2
+    Route::get('/api/brand/{brandId}/models', function (\App\Models\Brand $brandId) {
+        return response()->json($brandId->models);
+    });
+
+    Route::get('/api/generation/{generationId}', function (\App\Models\Generation $generationId) {
+        return response()->json($generationId->load('carModel.brand'));
+    });
+
+    Route::get('/api/model/{modelId}/generations', function (\App\Models\CarModel $modelId) {
+        return response()->json($modelId->generations);
+    });
+
+    Route::get('/api/generation/{generationId}/equipments', function (\App\Models\Generation $generationId) {
+        return response()->json($generationId->equipments);
+    });
+
+    // Для моделей (с поддержкой пагинации и highlight)
+    Route::get('/models', [CarStructureController::class, 'getPaginatedModels']);
+
+    // Для поколений (с поддержкой пагинации и highlight)
+    Route::get('/generations', [CarStructureController::class, 'getPaginatedGenerations']);
+
+    // Форма добавления и т.д.
+    Route::post('/brands', [CarStructureController::class, 'storeBrand'])->name('brands.store');
+    Route::put('/brands/{brand}', [CarStructureController::class, 'updateBrand'])->name('brands.update');
+    Route::delete('/brands/{brand}', [CarStructureController::class, 'destroyBrand'])->name('brands.destroy');
+
+    Route::post('/models', [CarStructureController::class, 'storeModel'])->name('models.store');
+    Route::put('/models/{model}', [CarStructureController::class, 'updateModel'])->name('models.update');
+    Route::delete('/models/{model}', [CarStructureController::class, 'destroyModel'])->name('models.destroy');
+
+    Route::post('/generations', [CarStructureController::class, 'storeGeneration'])->name('generations.store');
+    Route::put('/generations/{generation}', [CarStructureController::class, 'updateGeneration'])->name('generations.update');
+    Route::delete('/generations/{generation}', [CarStructureController::class, 'destroyGeneration'])->name('generations.destroy');
+
+});
 
 
 

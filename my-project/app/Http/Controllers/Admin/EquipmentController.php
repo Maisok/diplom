@@ -13,6 +13,7 @@ use App\Models\Generation;
 use App\Models\BodyType;
 use App\Models\EngineType;
 use App\Models\TransmissionType;
+use Illuminate\Validation\Rule;
 use App\Models\DriveType;
 use App\Models\Country;
 use Illuminate\Support\Facades\DB;
@@ -27,34 +28,78 @@ class EquipmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Equipment::with(['generation.carModel.brand']);
+        // === Обработка поиска комплектаций ===
+        $query = Equipment::with(['generation.carModel.brand', 'colors']);
 
-        // Поиск по марке
         if ($request->filled('brand_id')) {
-            $query->whereHas('generation.carModel', function ($q) use ($request) {
-                $q->where('brand_id', $request->input('brand_id'));
-            });
+            $query->whereHas('generation.carModel', fn($q) => $q->where('brand_id', $request->input('brand_id')));
         }
 
-        // Поиск по модели
         if ($request->filled('model_id')) {
-            $query->whereHas('generation', function ($q) use ($request) {
-                $q->where('car_model_id', $request->input('model_id'));
-            });
+            $query->whereHas('generation', fn($q) => $q->where('car_model_id', $request->input('model_id')));
         }
 
-        $colors = Color::with('equipments')->get();
+        if ($request->filled('generation_id')) {
+            $query->where('generation_id', $request->input('generation_id'));
+        }
+
         $equipments = $query->paginate(10);
 
-        $brands = Brand::all();
-        $models = collect(); // по умолчанию пустой список
+        // === Обработка поиска цветов ===
+        $colorQuery = Color::query()->with('equipments');
 
-        // если бренд выбран — загрузи модели
+        // Поиск по имени или HEX коду цвета
+        if ($request->filled('color_search')) {
+            $search = $request->input('color_search');
+            $colorQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                ->orWhere('hex_code', 'like', "%$search%");
+            });
+        }
+
+        // Поиск цветов, привязанных к конкретной комплектации
+        if ($request->filled('equipment_id')) {
+            $equipmentId = $request->input('equipment_id');
+            $colorQuery->whereHas('equipments', function ($q) use ($equipmentId) {
+                $q->where('equipment_id', $equipmentId);
+            });
+        }
+
+        $colors = $colorQuery->paginate(10);
+
+        // Для Select2 в форме
+        $brands = Brand::all();
+        $models = collect();
+        $generations = collect();
+
         if ($request->filled('brand_id')) {
             $models = CarModel::where('brand_id', $request->input('brand_id'))->get();
         }
 
-        return view('admin.equipments.index', compact('equipments', 'brands', 'models', 'colors'));
+        if ($request->filled('model_id')) {
+            $generations = Generation::where('car_model_id', $request->input('model_id'))->get();
+        }
+
+        // Все комплектации для Select2 (для поиска цветов по комплектации)
+        $allEquipments = Equipment::with(['generation.carModel.brand'])->get()->map(function ($eq) {
+            $brandName = $eq->generation?->carModel?->brand?->name ?? '';
+            $modelName = $eq->generation?->carModel?->name ?? '';
+            $generationName = $eq->generation?->name ?? '';
+        
+            return [
+                'id' => $eq->id,
+                'text' => trim("{$brandName} → {$modelName} → {$generationName}", " → "),
+            ];
+        });
+
+        return view('admin.equipments.index', compact(
+            'equipments',
+            'brands',
+            'models',
+            'generations',
+            'colors',
+            'allEquipments'
+        ));
     }
 
     // Форма создания
@@ -75,71 +120,122 @@ class EquipmentController extends Controller
         ));
     }
 
-    // Сохранение новой комплектации
+    
     public function store(Request $request)
     {
-        // Проверка прав
         if (!auth()->user()->isAdmin()) {
             return back()->with('error', 'Доступ запрещён');
         }
     
         // Валидация
         $data = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('equipment')->where(fn ($query) => $query->where('generation_id', $request->input('generation_id')))
+            ],
             'generation_id' => 'required|exists:generations,id',
             'body_type_id' => 'required|exists:body_types,id',
             'engine_type_id' => 'required|exists:engine_types,id',
-            'engine_name' => 'nullable|string|max:50',
-            'engine_volume' => 'nullable|numeric|min:0.8|max:8.0',
-            'engine_power' => 'nullable|integer|min:40|max:2000',
             'transmission_type_id' => 'required|exists:transmission_types,id',
-            'transmission_name' => 'nullable|string|max:50',
             'drive_type_id' => 'required|exists:drive_types,id',
             'country_id' => 'required|exists:countries,id',
-            'description' => 'nullable|string|max:1000',
-            'weight' => 'nullable|numeric|min:500|max:10000',
-            'load_capacity' => 'nullable|integer|min:0|max:3000',
-            'seats' => 'nullable|integer|min:2|max:9',
-            'fuel_consumption' => 'nullable|numeric|min:0.1|max:50',
-            'fuel_tank_volume' => 'nullable|integer|min:30|max:200',
-            'battery_capacity' => 'nullable|integer|min:10|max:200',
-            'range' => 'nullable|integer|min:50|max:1000',
-            'max_speed' => 'nullable|numeric|min:50|max:450',
-            'clearance' => 'nullable|numeric|min:100|max:400',
+            'engine_volume' => 'required|numeric|min:0.8|max:8.0',
+            'engine_power' => 'required|integer|min:40|max:2000',
+            'description' => 'required|string|max:1000',
+            'range' => 'required|integer|min:50|max:1000',
+            'max_speed' => 'required|integer|min:50|max:450',
             'model_folder' => 'nullable|file|mimes:zip|max:51200',
+    
             // Цвета
+            'colors' => 'array|nullable',
             'new_colors' => 'array|nullable',
             'new_colors.*.name' => 'required_with:new_colors.*.hex|string|max:255',
             'new_colors.*.hex' => [
                 'required_with:new_colors.*.name',
                 'regex:/^#([A-Fa-f0-9]{6})$/i'
             ],
+        ], [
+            'name.required' => 'Поле "Название" обязательно.',
+            'name.string' => 'Поле "Название" должно быть строкой.',
+            'name.max' => 'Поле "Название" не должно превышать 50 символов.',
+            'name.unique' => 'Комплектация с таким названием уже существует для этого поколения.',
+    
+            'generation_id.required' => 'Поле "Поколение" обязательно.',
+            'generation_id.exists' => 'Выбранное поколение не существует.',
+    
+            'body_type_id.required' => 'Поле "Тип кузова" обязательно.',
+            'body_type_id.exists' => 'Выбранный тип кузова не существует.',
+    
+            'engine_type_id.required' => 'Поле "Тип двигателя" обязательно.',
+            'engine_type_id.exists' => 'Выбранный тип двигателя не существует.',
+    
+            'transmission_type_id.required' => 'Поле "Тип КПП" обязательно.',
+            'transmission_type_id.exists' => 'Выбранный тип КПП не существует.',
+    
+            'drive_type_id.required' => 'Поле "Привод" обязательно.',
+            'drive_type_id.exists' => 'Выбранный привод не существует.',
+    
+            'country_id.required' => 'Поле "Страна сборки" обязательно.',
+            'country_id.exists' => 'Выбранная страна не существует.',
+    
+            'engine_volume.required' => 'Поле "Объем двигателя" обязательно.',
+            'engine_volume.numeric' => 'Объем двигателя должен быть числом.',
+            'engine_volume.min' => 'Объем двигателя не может быть меньше 0.8.',
+            'engine_volume.max' => 'Объем двигателя не может быть больше 8.0.',
+    
+            'engine_power.required' => 'Поле "Мощность двигателя" обязательно.',
+            'engine_power.integer' => 'Мощность двигателя должна быть целым числом.',
+            'engine_power.min' => 'Мощность двигателя не может быть меньше 40.',
+            'engine_power.max' => 'Мощность двигателя не может быть больше 2000.',
+    
+            'description.required' => 'Поле "Описание" обязательно.',
+            'description.string' => 'Описание должно быть строкой.',
+            'description.max' => 'Описание не должно превышать 1000 символов.',
+    
+            'range.required' => 'Поле "Запас хода" обязательно.',
+            'range.integer' => 'Запас хода должен быть целым числом.',
+            'range.min' => 'Запас хода не может быть меньше 50.',
+            'range.max' => 'Запас хода не может быть больше 1000.',
+    
+            'max_speed.required' => 'Поле "Максимальная скорость" обязательно.',
+            'max_speed.integer' => 'Максимальная скорость должна быть целым числом.',
+            'max_speed.min' => 'Максимальная скорость не может быть меньше 50.',
+            'max_speed.max' => 'Максимальная скорость не может быть больше 450.',
+    
+            'model_folder.required' => 'Файл модели обязателен.',
+            'model_folder.file' => 'Вы должны загрузить файл.',
+            'model_folder.mimes' => 'Формат файла должен быть ZIP.',
+            'model_folder.max' => 'Размер файла не должен превышать 50 МБ.',
+    
+            'new_colors.*.name.required_with' => 'Название цвета обязательно, если указан HEX код.',
+            'new_colors.*.hex.required_with' => 'HEX код обязателен, если указано название.',
+            'new_colors.*.hex.regex' => 'HEX код должен быть в формате #FFFFFF.',
         ]);
     
         DB::beginTransaction();
     
         try {
-            // 1. Создание комплектации
+            // Создаем комплектацию
             $equipment = Equipment::create($data);
     
-            // 2. Обработка модели (если загружена)
+            // Обрабатываем модель
             if ($request->hasFile('model_folder')) {
                 $this->process3dModel($request->file('model_folder'), $equipment);
             }
     
-            // 3. Обработка цветов
+            // Обрабатываем цвета
             $this->processColors($request, $equipment);
     
-            DB::commit();
-    
+            \DB::commit();
             return redirect()->route('admin.equipments.index')
-                ->with('success', 'Комплектация добавлена');
+                             ->with('success', 'Комплектация успешно добавлена');
     
         } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Ошибка при создании комплектации: ' . $e->getMessage());
-    
+            \DB::rollBack();
             return back()->withInput()
-                ->with('error', 'Ошибка: ' . $e->getMessage());
+                         ->with('error', 'Ошибка при сохранении: ' . $e->getMessage());
         }
     }
 
@@ -231,88 +327,157 @@ class EquipmentController extends Controller
     // Редактирование
     public function edit(Equipment $equipment)
     {
-        // Все марки для селекта
         $brands = Brand::all();
-
-        // Модели текущей марки (если комплектация уже имеет generation)
-        $models = collect(); // по умолчанию пустой список
+        
+        // Инициализируем как пустую коллекцию
+        $models = collect();
+        $generations = collect();
+    
+        // Загружаем модели текущей марки (если поколение и модель существуют)
         if ($equipment->generation && $equipment->generation->carModel && $equipment->generation->carModel->brand) {
-            $models = $equipment->generation->carModel->brand->carModels;
+            $models = $equipment->generation->carModel->brand->models()->get(); // get() → получаем коллекцию
         }
-
-        // Поколения текущей модели
-        $generations = collect(); // по умолчанию пустой список
+    
+        // Загружаем поколения текущей модели (если поколение существует)
         if ($equipment->generation && $equipment->generation->carModel) {
-            $generations = $equipment->generation->carModel->generations;
+            $generations = $equipment->generation->carModel->generations()->get(); // get() → коллекция
         }
-
-        // Все цвета для множественного выбора
+    
+        $bodyTypes = BodyType::all();
+        $engineTypes = EngineType::all();
+        $transmissionTypes = TransmissionType::all();
+        $driveTypes = DriveType::all();
+        $countries = Country::all();
         $colors = Color::all();
-
-        // Вернуть представление с данными
+    
         return view('admin.equipments.edit', compact(
-            'equipment',
-            'brands',
-            'models',
-            'generations',
-            'colors'
+            'equipment', 'brands', 'models', 'generations',
+            'bodyTypes', 'engineTypes', 'transmissionTypes',
+            'driveTypes', 'countries', 'colors'
         ));
     }
-
-    // Обновление
+    
     public function update(Request $request, Equipment $equipment)
     {
+        if (!auth()->user()->isAdmin()) {
+            return back()->with('error', 'Доступ запрещён');
+        }
+    
         // Валидация
         $data = $request->validate([
             'generation_id' => 'required|exists:generations,id',
             'body_type_id' => 'required|exists:body_types,id',
             'engine_type_id' => 'required|exists:engine_types,id',
-            'engine_name' => 'nullable|string|max:50',
-            'engine_volume' => 'nullable|numeric|min:0.8|max:8.0',
-            'engine_power' => 'nullable|integer|min:40|max:2000',
             'transmission_type_id' => 'required|exists:transmission_types,id',
-            'transmission_name' => 'nullable|string|max:50',
             'drive_type_id' => 'required|exists:drive_types,id',
             'country_id' => 'required|exists:countries,id',
-            'description' => 'nullable|string',
-            'weight' => 'nullable|numeric|min:500|max:10000',
-            'load_capacity' => 'nullable|integer|min:0|max:3000',
-            'seats' => 'nullable|integer|min:2|max:9',
-            'fuel_consumption' => 'nullable|numeric|min:0.1|max:50',
-            'fuel_tank_volume' => 'nullable|integer|min:30|max:200',
-            'battery_capacity' => 'nullable|integer|min:10|max:200',
+            'name' => [
+                'required', 
+                'string', 
+                'max:50',
+                Rule::unique('equipment')->where(fn ($query) => $query->where('generation_id', $request->input('generation_id')))
+                 ->ignore($equipment->id)
+            ],
+            'engine_volume' => 'nullable|numeric|min:0.8|max:8.0',
+            'engine_power' => 'nullable|integer|min:40|max:2000',
+            'description' => 'nullable|string|max:1000',
             'range' => 'nullable|integer|min:50|max:1000',
             'max_speed' => 'nullable|numeric|min:50|max:450',
-            'clearance' => 'nullable|numeric|min:100|max:400',
-            'model_folder' => 'nullable|file|mimes:zip|max:51200', // 50MB
+            'model_folder' => 'nullable|file|mimes:zip|max:51200',
             'remove_model' => 'nullable|boolean',
-    
-            // Валидация новых цветов
+        
+            // Цвета
+            'colors' => 'array|nullable',
+            'colors.*' => 'exists:colors,id',
             'new_colors' => 'array|nullable',
-            'new_colors.*.name' => 'required_with:new_colors.*.hex|string|max:255',
-            'new_colors.*.hex' => [
-                'required_with:new_colors.*.name',
-                'regex:/^#([A-Fa-f0-9]{6})$/i'
-            ],
+            'new_colors.*.name' => 'string|max:255|nullable',
+            'new_colors.*.hex' => ['regex:/^#([A-Fa-f0-9]{6})$/i','nullable'],
+        ], [
+            // Сообщения об ошибках на русском
+            'name.required' => 'Поле "Название" обязательно.',
+            'name.string' => 'Поле "Название" должно быть строкой.',
+            'name.max' => 'Поле "Название" не должно превышать 50 символов.',
+            'name.unique' => 'Комплектация с таким названием уже существует для этого поколения.',
+        
+            'generation_id.required' => 'Поле "Поколение" обязательно.',
+            'generation_id.exists' => 'Выбранное поколение не существует.',
+        
+            'body_type_id.required' => 'Поле "Тип кузова" обязательно.',
+            'body_type_id.exists' => 'Выбранный тип кузова не существует.',
+        
+            'engine_type_id.required' => 'Поле "Тип двигателя" обязательно.',
+            'engine_type_id.exists' => 'Выбранный тип двигателя не существует.',
+        
+            'transmission_type_id.required' => 'Поле "Тип КПП" обязательно.',
+            'transmission_type_id.exists' => 'Выбранный тип КПП не существует.',
+        
+            'drive_type_id.required' => 'Поле "Привод" обязательно.',
+            'drive_type_id.exists' => 'Выбранный привод не существует.',
+        
+            'country_id.required' => 'Поле "Страна сборки" обязательно.',
+            'country_id.exists' => 'Выбранная страна не существует.',
+        
+            'engine_volume.numeric' => 'Объем двигателя должен быть числом.',
+            'engine_volume.min' => 'Объем двигателя не может быть меньше 0.8.',
+            'engine_volume.max' => 'Объем двигателя не может быть больше 8.0.',
+        
+            'engine_power.integer' => 'Мощность двигателя должна быть целым числом.',
+            'engine_power.min' => 'Мощность двигателя не может быть меньше 40.',
+            'engine_power.max' => 'Мощность двигателя не может быть больше 2000.',
+        
+            'description.string' => 'Описание должно быть строкой.',
+            'description.max' => 'Описание не должно превышать 1000 символов.',
+        
+            'range.integer' => 'Запас хода должен быть целым числом.',
+            'range.min' => 'Запас хода не может быть меньше 50.',
+            'range.max' => 'Запас хода не может быть больше 1000.',
+        
+            'max_speed.numeric' => 'Максимальная скорость должна быть числом.',
+            'max_speed.min' => 'Максимальная скорость не может быть меньше 50.',
+            'max_speed.max' => 'Максимальная скорость не может быть больше 450.',
+        
+            'model_folder.file' => 'Вы должны загрузить файл.',
+            'model_folder.mimes' => 'Формат файла должен быть ZIP.',
+            'model_folder.max' => 'Размер файла не должен превышать 50 МБ.',
+        
+            'remove_model.boolean' => 'Поле "Удалить модель" должно быть установлено или нет.',
+            
+            'new_colors.*.name.string' => 'Название нового цвета должно быть строкой.',
+            'new_colors.*.name.max' => 'Название нового цвета не должно превышать 255 символов.',
+            'new_colors.*.hex.regex' => 'HEX код должен быть в формате #FFFFFF.',
         ]);
     
         DB::beginTransaction();
     
         try {
-            // Удаление модели, если отмечено
+            // Удаление модели (если нужно)
             if ($request->has('remove_model')) {
                 $this->delete3dModel($equipment);
             }
     
-            // Обновление модели, если загружена новая
+            // Загрузка новой модели (если есть)
             if ($request->hasFile('model_folder')) {
                 $this->process3dModel($request->file('model_folder'), $equipment);
             }
     
-            // Обновляем основные данные комплектации
-            $equipment->update($request->except(['colors', 'new_colors', 'model_folder', 'remove_model']));
+            // Обновляем основные данные
+            $equipment->update(array_merge(
+                $request->only([
+                    'name', 'generation_id', 'body_type_id', 'engine_type_id',
+                    'engine_volume', 'engine_power', 'transmission_type_id',
+                    'transmission_name', 'drive_type_id', 'country_id',
+                    'description', 'weight', 'load_capacity', 'seats',
+                    'fuel_consumption', 'fuel_tank_volume', 'battery_capacity',
+                    'range', 'max_speed', 'clearance'
+                ]),
+                ['model_path' => $equipment->model_path]
+            ));
     
-            // Прикрепляем новые цвета
+            // Обработка цветов
+            if ($request->has('colors')) {
+                $equipment->colors()->sync($request->input('colors'));
+            }
+    
             if ($request->has('new_colors')) {
                 foreach ($request->input('new_colors', []) as $colorData) {
                     if (!empty($colorData['name']) && !empty($colorData['hex'])) {
@@ -326,20 +491,15 @@ class EquipmentController extends Controller
             }
     
             DB::commit();
-    
             return redirect()
                 ->route('admin.equipments.index')
                 ->with('success', 'Комплектация обновлена');
     
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Equipment update failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-    
+            \Log::error('Ошибка при редактировании комплектации: ' . $e->getMessage());
             return back()->withInput()
-                ->with('error', 'Ошибка: '.$e->getMessage());
+                         ->with('error', 'Ошибка: ' . $e->getMessage());
         }
     }
     
@@ -376,35 +536,48 @@ class EquipmentController extends Controller
             'name' => 'required|string|max:50',
             'hex_code' => ['required', 'regex:/^#([A-Fa-f0-9]{6})$/'],
             'color_id' => 'required|exists:colors,id',
+        ], [
+            'name.required' => 'Поле "Название" обязательно для заполнения.',
+            'name.string' => 'Поле "Название" должно быть строкой.',
+            'name.max' => 'Поле "Название" не должно превышать 50 символов.',
+            'hex_code.required' => 'Поле "HEX код" обязательно для заполнения.',
+            'hex_code.regex' => 'HEX код должен быть в формате #FFFFFF.',
+            'color_id.required' => 'ID цвета не указан.',
+            'color_id.exists' => 'Такого цвета не существует.',
         ]);
-
+    
         if ($validator->fails()) {
             return back()
                 ->withErrors(['colorErrors' => $validator->errors()->all()])
                 ->withInput();
         }
-
+    
         $color = Color::findOrFail($request->input('color_id'));
         $color->update([
             'name' => $request->input('name'),
             'hex_code' => $request->input('hex_code'),
         ]);
-
+    
         return back()->with('success', 'Цвет успешно обновлён');
     }
 
-    /**
-     * Удаление цвета
-     */
     public function deleteColor(Request $request)
     {
         $request->validate([
             'color_id' => 'required|exists:colors,id',
+        ], [
+            'color_id.required' => 'ID цвета не указан.',
+            'color_id.exists' => 'Такого цвета не существует.',
         ]);
-
+    
         $color = Color::findOrFail($request->input('color_id'));
+    
+        if ($color->equipments()->exists()) {
+            return back()->with('error', 'Невозможно удалить цвет — он используется в комплектациях.');
+        }
+    
         $color->delete();
-
+    
         return back()->with('success', 'Цвет успешно удалён');
     }
 }

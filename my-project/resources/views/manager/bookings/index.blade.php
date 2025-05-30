@@ -19,7 +19,6 @@
         @endif
 
         <!-- Фильтры -->
-      <!-- Фильтры -->
 <div class="bg-[#3C3C3C] rounded-xl shadow-lg p-6 mb-6">
     <form action="{{ route('manager.bookings.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <!-- Статус -->
@@ -34,7 +33,15 @@
                 <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Завершено</option>
             </select>
         </div>
-
+        <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Тип бронирования</label>
+            <select name="type"
+                    class="w-full px-4 py-3 bg-[#2D2D2D] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">Все</option>
+                <option value="mine" {{ request('type') == 'mine' ? 'selected' : '' }}>Мои</option>
+                <option value="free" {{ request('type') == 'free' ? 'selected' : '' }}>Свободные</option>
+            </select>
+        </div>
         <!-- Дата от -->
         <div>
             <label class="block text-sm font-medium text-gray-400 mb-2">Дата от</label>
@@ -122,31 +129,51 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @switch($booking->status)
-                                        @case('pending') bg-yellow-500/20 text-yellow-400 @break
-                                        @case('confirmed') bg-green-500/20 text-green-400 @break
-                                        @case('rejected') bg-red-500/20 text-red-400 @break
-                                        @case('completed') bg-blue-500/20 text-blue-400 @break
-                                        @default bg-gray-500/20 text-gray-400
-                                    @endswitch">
-                                    {{ \Illuminate\Support\Str::ucfirst(__($booking->status)) }}
-                                </span>
+                                @switch($booking->status)
+                                    @case('pending') bg-yellow-500/20 text-yellow-400 @break
+                                    @case('confirmed') bg-green-500/20 text-green-400 @break
+                                    @case('rejected') bg-red-500/20 text-red-400 @break
+                                    @case('completed') bg-blue-500/20 text-blue-400 @break
+                                    @default bg-gray-500/20 text-gray-400
+                                @endswitch">
+                                {{ match($booking->status) {
+                                    'pending' => 'Ожидание',
+                                    'confirmed' => 'Подтверждено',
+                                    'rejected' => 'Отклонено',
+                                    'completed' => 'Завершено',
+                                    default => 'Неизвестный статус',
+                                } }}
+                            </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2">
-                                <a href="{{ route('manager.bookings.edit', $booking) }}"
-                                   class="inline-block px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-all">
-                                    Редактировать
-                                </a>
-                                <form action="{{ route('manager.bookings.destroy', $booking) }}" method="POST"
-                                      onsubmit="return confirm('Вы уверены, что хотите удалить это бронирование?')"
-                                      class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-all">
-                                        Удалить
-                                    </button>
-                                </form>
+                                @if(is_null($booking->manager_id))
+                                    <form action="{{ route('manager.bookings.assign', $booking) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-all">
+                                            Принять в работу
+                                        </button>
+                                    </form>
+                                @else
+                                    @if($booking->manager_id == auth()->id())
+                                        <a href="{{ route('manager.bookings.edit', $booking) }}"
+                                           class="inline-block px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-all">
+                                            Редактировать
+                                        </a>
+                                        <form action="{{ route('manager.bookings.destroy', $booking) }}" method="POST"
+                                              onsubmit="return confirm('Вы уверены?')"
+                                              class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-all">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-gray-500">Занято</span>
+                                    @endif
+                                @endif
                             </td>
                         </tr>
                         @empty

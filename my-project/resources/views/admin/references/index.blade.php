@@ -41,7 +41,7 @@
             </div>
         @endif
 
-        @if ($errors->any())
+        @if ($errors->any()))
             <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -92,15 +92,19 @@
             </form>
         </div>
 
-        <!-- Reference Sections Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            
+        <!-- Reference Sections Accordion -->
+        <div class="space-y-4">
             <!-- Body Types Card -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Типы кузова</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+                <button onclick="toggleAccordion('bodyTypes')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Типы кузова</h3>
+                        <svg id="bodyTypesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="bodyTypesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.body-types.store') }}" class="mb-4" onsubmit="return confirm('Добавить новый тип кузова?')">
                         @csrf
@@ -121,7 +125,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($bodyTypes as $type)
-                                <li class="px-4 py-3 sm:px-6">
+                                <li class="px-4 py-3 sm:px-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $type->name }}</p>
@@ -165,10 +169,15 @@
 
             <!-- Countries Card -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Страны</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+                <button onclick="toggleAccordion('countries')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Страны</h3>
+                        <svg id="countriesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="countriesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.countries.store') }}" class="mb-4" onsubmit="return confirm('Добавить новую страну?')">
                         @csrf
@@ -193,7 +202,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($countries as $country)
-                                <li class="px-4 py-3 sm:px-6">
+                                <li class="px-4 py-3 sm:px-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $country->name }}</p>
@@ -242,10 +251,15 @@
 
             <!-- Drive Types Card -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Типы привода</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+                <button onclick="toggleAccordion('driveTypes')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Типы привода</h3>
+                        <svg id="driveTypesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="driveTypesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.drive-types.store') }}" class="mb-4" onsubmit="return confirm('Добавить новый тип привода?')">
                         @csrf
@@ -266,7 +280,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($driveTypes as $type)
-                                <li class="px-4 py-3 sm:px-6">
+                                <li class="px-4 py-3 sm:px-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $type->name }}</p>
@@ -310,10 +324,15 @@
 
             <!-- Engine Types Card -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Типы двигателей</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+                <button onclick="toggleAccordion('engineTypes')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Типы двигателей</h3>
+                        <svg id="engineTypesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="engineTypesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.engine-types.store') }}" class="mb-4" onsubmit="return confirm('Добавить новый тип двигателя?')">
                         @csrf
@@ -334,7 +353,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($engineTypes as $type)
-                                <li class="px-4 py-3 sm:px-6">
+                                <li class="px-4 py-3 sm:px-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $type->name }}</p>
@@ -378,10 +397,15 @@
 
             <!-- Transmission Types Card -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Коробки передач</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+                <button onclick="toggleAccordion('transmissionTypes')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Коробки передач</h3>
+                        <svg id="transmissionTypesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="transmissionTypesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.transmission-types.store') }}" class="mb-4" onsubmit="return confirm('Добавить новый тип КПП?')">
                         @csrf
@@ -402,7 +426,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($transmissionTypes as $type)
-                                <li class="px-4 py-3 sm:px-6">
+                                <li class="px-4 py-3 sm:px-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex items-center justify-between space-x-4">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium text-gray-900 truncate">{{ $type->name }}</p>
@@ -445,11 +469,16 @@
             </div>
 
             <!-- Branches Card -->
-            <div class="bg-white overflow-hidden shadow rounded-lg lg:col-span-2">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Филиалы</h3>
-                </div>
-                <div class="px-4 py-5 sm:p-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <button onclick="toggleAccordion('branches')" class="w-full px-4 py-5 sm:px-6 border-b border-gray-200 text-left focus:outline-none">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Филиалы</h3>
+                        <svg id="branchesIcon" class="h-5 w-5 text-gray-500 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
+                <div id="branchesContent" class="hidden px-4 py-5 sm:p-6">
                     <!-- Add Form -->
                     <form method="POST" action="{{ route('admin.branches.store') }}" enctype="multipart/form-data" class="mb-6 space-y-4">
                         @csrf
@@ -497,7 +526,7 @@
                     <div class="overflow-hidden border border-gray-200 rounded-lg">
                         <ul class="divide-y divide-gray-200">
                             @foreach ($branches as $branch)
-                                <li class="px-4 py-5 sm:p-6">
+                                <li class="px-4 py-5 sm:p-6 hover:bg-gray-50 transition-colors">
                                     <div class="flex flex-col md:flex-row md:justify-between md:space-x-4 space-y-4 md:space-y-0">
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center space-x-3">
@@ -567,127 +596,138 @@
         </div>
     </div>
 
-<div id="mapModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-lg">
-            <div class="flex justify-between items-center px-6 py-3 border-b">
-                <h3 class="text-lg font-medium">Выберите место на карте</h3>
-                <button onclick="closeMapModal()" type="button" class="text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-            <div class="p-4 h-96">
-                <div id="yandexMap" class="w-full h-full"></div>
-            </div>
-            <div class="px-6 py-4 flex justify-end space-x-3 border-t">
-                <span id="selectedCoords" class="text-sm text-gray-600 mr-auto"></span>
-                <button onclick="confirmLocation()" type="button"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Выбрать
-                </button>
+    <!-- Map Modal -->
+    <div id="mapModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="relative w-full max-w-4xl bg-white rounded-lg shadow-lg">
+                <div class="flex justify-between items-center px-6 py-3 border-b">
+                    <h3 class="text-lg font-medium">Выберите место на карте</h3>
+                    <button onclick="closeMapModal()" type="button" class="text-gray-500 hover:text-gray-700">&times;</button>
+                </div>
+                <div class="p-4 h-96">
+                    <div id="yandexMap" class="w-full h-full"></div>
+                </div>
+                <div class="px-6 py-4 flex justify-end space-x-3 border-t">
+                    <span id="selectedCoords" class="text-sm text-gray-600 mr-auto"></span>
+                    <button onclick="confirmLocation()" type="button"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Выбрать
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    let map;
-    let selectedPlacemark = null;
-    let currentInputId = '';
-    
-    ymaps.ready(init);
-    
-    function init() {
-        map = new ymaps.Map("yandexMap", {
-            center: [52.291839, 104.280607],
-            zoom: 10,
-            controls: ['zoomControl', 'typeSelector', 'searchControl']
-        });
-    
-        // При клике на карту — ставим маркер
-        map.events.add('click', function(e) {
-            const coords = e.get('coords');
-    
-            if (selectedPlacemark) {
-                selectedPlacemark.geometry.setCoordinates(coords);
-            } else {
-                selectedPlacemark = new ymaps.Placemark(coords);
-                map.geoObjects.add(selectedPlacemark);
-            }
-    
-            document.getElementById('selectedCoords').innerText = `Координаты: ${coords}`;
-        });
-    }
-    
-    // Открытие модального окна
-    function openMapModal(inputId, mode = 'add') {
-        currentInputId = inputId;
-    
-        // Очистка предыдущего маркера
-        if (selectedPlacemark) {
-            map.geoObjects.remove(selectedPlacemark);
-            selectedPlacemark = null;
+    <script>
+        // Accordion functionality
+        function toggleAccordion(sectionId) {
+            const content = document.getElementById(`${sectionId}Content`);
+            const icon = document.getElementById(`${sectionId}Icon`);
+            
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
         }
-    
-        document.getElementById('mapModal').classList.remove('hidden');
-    
-        // Если это режим редактирования — ищем по текущему адресу
-        if (mode === 'edit') {
-            const addressInput = document.getElementById(currentInputId);
-            const value = addressInput?.value.trim();
-    
-            if (value) {
-                ymaps.geocode(value).then(function(res) {
-                    const firstGeoObject = res.geoObjects.get(0);
-                    if (firstGeoObject) {
-                        const coords = firstGeoObject.geometry.getCoordinates();
-                        map.setCenter(coords, 15);
-                        selectedPlacemark = new ymaps.Placemark(coords);
-                        map.geoObjects.add(selectedPlacemark);
-                        document.getElementById('selectedCoords').innerText = `Координаты: ${coords}`;
-                    }
-                });
-            }
-        }
-    }
-    
-    function closeMapModal() {
-        document.getElementById('mapModal').classList.add('hidden');
-    }
-    
-    function confirmLocation() {
-        if (!selectedPlacemark) {
-            alert('Пожалуйста, выберите место на карте.');
-            return;
-        }
-    
-        const coords = selectedPlacemark.geometry.getCoordinates();
-    
-        // Получаем адрес по координатам
-        ymaps.geocode(coords).then(function(res) {
-            const firstGeoObject = res.geoObjects.get(0);
-            const address = firstGeoObject.getAddressLine();
-    
-            // Подставляем адрес в форму
-            document.getElementById(currentInputId).value = address;
-    
-            // Сохраняем координаты (если нужно)
-            const form = document.querySelector(`form`);
-            if (form) {
-                let latInput = form.querySelector('input[name="latitude"]');
-                let lngInput = form.querySelector('input[name="longitude"]');
-    
-                if (!latInput) {
-                    form.insertAdjacentHTML('beforeend', `
-                        <input type="hidden" name="latitude" value="${coords[0]}">
-                        <input type="hidden" name="longitude" value="${coords[1]}">
-                    `);
+
+        // Map functionality
+        let map;
+        let selectedPlacemark = null;
+        let currentInputId = '';
+        
+        ymaps.ready(init);
+        
+        function init() {
+            map = new ymaps.Map("yandexMap", {
+                center: [52.291839, 104.280607],
+                zoom: 10,
+                controls: ['zoomControl', 'typeSelector', 'searchControl']
+            });
+        
+            // При клике на карту — ставим маркер
+            map.events.add('click', function(e) {
+                const coords = e.get('coords');
+        
+                if (selectedPlacemark) {
+                    selectedPlacemark.geometry.setCoordinates(coords);
                 } else {
-                    latInput.value = coords[0];
-                    lngInput.value = coords[1];
+                    selectedPlacemark = new ymaps.Placemark(coords);
+                    map.geoObjects.add(selectedPlacemark);
+                }
+        
+                document.getElementById('selectedCoords').innerText = `Координаты: ${coords}`;
+            });
+        }
+        
+        // Открытие модального окна
+        function openMapModal(inputId, mode = 'add') {
+            currentInputId = inputId;
+        
+            // Очистка предыдущего маркера
+            if (selectedPlacemark) {
+                map.geoObjects.remove(selectedPlacemark);
+                selectedPlacemark = null;
+            }
+        
+            document.getElementById('mapModal').classList.remove('hidden');
+        
+            // Если это режим редактирования — ищем по текущему адресу
+            if (mode === 'edit') {
+                const addressInput = document.getElementById(currentInputId);
+                const value = addressInput?.value.trim();
+        
+                if (value) {
+                    ymaps.geocode(value).then(function(res) {
+                        const firstGeoObject = res.geoObjects.get(0);
+                        if (firstGeoObject) {
+                            const coords = firstGeoObject.geometry.getCoordinates();
+                            map.setCenter(coords, 15);
+                            selectedPlacemark = new ymaps.Placemark(coords);
+                            map.geoObjects.add(selectedPlacemark);
+                            document.getElementById('selectedCoords').innerText = `Координаты: ${coords}`;
+                        }
+                    });
                 }
             }
-    
-            closeMapModal();
-        });
-    }
+        }
+        
+        function closeMapModal() {
+            document.getElementById('mapModal').classList.add('hidden');
+        }
+        
+        function confirmLocation() {
+            if (!selectedPlacemark) {
+                alert('Пожалуйста, выберите место на карте.');
+                return;
+            }
+        
+            const coords = selectedPlacemark.geometry.getCoordinates();
+        
+            // Получаем адрес по координатам
+            ymaps.geocode(coords).then(function(res) {
+                const firstGeoObject = res.geoObjects.get(0);
+                const address = firstGeoObject.getAddressLine();
+        
+                // Подставляем адрес в форму
+                document.getElementById(currentInputId).value = address;
+        
+                // Сохраняем координаты (если нужно)
+                const form = document.querySelector(`form`);
+                if (form) {
+                    let latInput = form.querySelector('input[name="latitude"]');
+                    let lngInput = form.querySelector('input[name="longitude"]');
+        
+                    if (!latInput) {
+                        form.insertAdjacentHTML('beforeend', `
+                            <input type="hidden" name="latitude" value="${coords[0]}">
+                            <input type="hidden" name="longitude" value="${coords[1]}">
+                        `);
+                    } else {
+                        latInput.value = coords[0];
+                        lngInput.value = coords[1];
+                    }
+                }
+        
+                closeMapModal();
+            });
+        }
     </script>
 @endsection
