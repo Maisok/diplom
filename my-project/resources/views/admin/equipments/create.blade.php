@@ -195,10 +195,10 @@
                 </div>
             </div>
 
-            <!-- Цвета -->
+
             <div class="mb-6 p-4 border border-gray-200 rounded-lg">
                 <h3 class="text-lg font-medium text-gray-800 mb-4">Цвета</h3>
-            
+                
                 <!-- Существующие цвета -->
                 <div class="mb-6">
                     <label for="colors" class="block text-sm font-medium text-gray-700 mb-2">Существующие цвета</label>
@@ -210,29 +210,33 @@
                         @endforeach
                     </select>
                 </div>
-            
+
                 <!-- Новые цвета -->
                 <div class="space-y-3" id="new-colors-container">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Добавить новые цвета</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Название</label>
-                            <input type="text" name="new_colors[0][name]" placeholder="Название" maxlength="50" required
-                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">HEX код</label>
-                            <input type="text" name="new_colors[0][hex]" placeholder="#FF5733" maxlength="7" minlength="7" required
-                                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
-                        </div>
-                        <div class="flex items-end">
-                            <button type="button" onclick="addNewColorField()" 
-                                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Добавить цвет
-                            </button>
+                    <div id="new-colors-fields">
+                        <!-- Поле по умолчанию -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Название</label>
+                                <input type="text" name="new_colors[0][name]" placeholder="Название" maxlength="50"
+                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">HEX код</label>
+                                <input type="text" name="new_colors[0][hex]" placeholder="#FF5733" maxlength="7" minlength="7"
+                                    class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="button" onclick="addNewColorField()"
+                                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Добавить цвет
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -302,26 +306,26 @@ $(document).ready(function () {
 
 <script>
     let colorIndex = 0;
-    
+
     function addNewColorField() {
         colorIndex++;
-        const container = document.getElementById('new-colors-container');
-    
+        const container = document.getElementById('new-colors-fields');
         const div = document.createElement('div');
         div.className = 'grid grid-cols-1 md:grid-cols-3 gap-3 mt-3';
+        div.setAttribute('data-color-field', '');
         div.innerHTML = `
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Название</label>
-                <input type="text" name="new_colors[${colorIndex}][name]" placeholder="Название" maxlength="50" required
+                <input type="text" name="new_colors[${colorIndex}][name]" placeholder="Название" maxlength="50"
                        class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">HEX код</label>
-                <input type="text" name="new_colors[${colorIndex}][hex]" placeholder="#FF5733" maxlength="7" minlength="7" required
+                <input type="text" name="new_colors[${colorIndex}][hex]" placeholder="#FF5733" maxlength="7" minlength="7"
                        class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2">
             </div>
             <div class="flex items-end">
-                <button type="button" onclick="removeColorField(this)" 
+                <button type="button" onclick="removeColorField(this)"
                         class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -331,60 +335,39 @@ $(document).ready(function () {
             </div>
         `;
         container.appendChild(div);
+        toggleRequiredFields(); // Обновляем состояние required после добавления
     }
-    
-    function removeColorField(button) {
-        button.closest('.grid').remove();
-    }
-</script>
 
-<script>
-    $(document).ready(function () {
-        const colorSelect = $('#color-select');
-        const customNameInput = $('#custom_color_name');
-        const customHexInput = $('#custom_color_hex');
-    
-        function disableCustomFields(disabled) {
-            customNameInput.prop('disabled', disabled);
-            customHexInput.prop('disabled', disabled);
-        }
-    
-        function disableColorSelect(disabled) {
-            colorSelect.prop('disabled', disabled);
-        }
-    
-        // При выборе цвета из списка
-        colorSelect.on('change', function () {
-            if ($(this).val()) {
-                disableCustomFields(true);
+    function removeColorField(button) {
+        button.closest('[data-color-field]').remove();
+        toggleRequiredFields(); // Обновляем состояние required после удаления
+    }
+
+    function toggleRequiredFields() {
+        const select = document.getElementById('colors');
+        if (!select) return;
+
+        const selectedOptions = Array.from(select.selectedOptions);
+        const isNewColorsRequired = selectedOptions.length === 0;
+
+        // Обрабатываем все инпуты новых цветов
+        document.querySelectorAll('input[name*="new_colors"]').forEach(input => {
+            if (isNewColorsRequired) {
+                input.setAttribute('required', 'required');
             } else {
-                disableCustomFields(false);
+                input.removeAttribute('required');
             }
         });
-    
-        // При вводе своего названия или HEX кода
-        customNameInput.on('input', function () {
-            if ($(this).val() || customHexInput.val()) {
-                disableColorSelect(true);
-            } else {
-                disableColorSelect(false);
-            }
-        });
-    
-        customHexInput.on('input', function () {
-            if ($(this).val() || customNameInput.val()) {
-                disableColorSelect(true);
-            } else {
-                disableColorSelect(false);
-            }
-        });
-    
-        // Проверка при загрузке
-        if (colorSelect.val()) {
-            disableCustomFields(true);
-        } else if (customNameInput.val() || customHexInput.val()) {
-            disableColorSelect(true);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const select = document.getElementById('colors');
+        if (select) {
+            toggleRequiredFields(); // Проверка при загрузке
+            select.addEventListener('change', toggleRequiredFields); // Отслеживаем изменения
         }
     });
-    </script>
+</script>
+
+    
 @endsection

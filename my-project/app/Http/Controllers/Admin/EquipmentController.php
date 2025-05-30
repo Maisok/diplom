@@ -102,14 +102,16 @@ class EquipmentController extends Controller
         ));
     }
 
+
+    
     public function store(Request $request)
     {
         if (!auth()->user()->isAdmin()) {
             return back()->with('error', 'Доступ запрещён');
         }
-
-        // Валидация
-        $data = $request->validate([
+    
+        // Определяем динамически правила валидации
+        $rules = [
             'name' => [
                 'required',
                 'string',
@@ -128,14 +130,23 @@ class EquipmentController extends Controller
             'range' => 'required|integer|min:50|max:1000',
             'max_speed' => 'required|integer|min:50|max:450',
             'model_folder' => 'nullable|file|mimes:zip|max:51200',
-            // Цвета
-
-            'new_colors.*.name' => 'required_with:new_colors.*.hex|string|max:50',
-            'new_colors.*.hex' => [
-                'required_with:new_colors.*.name',
+    
+            // Цвета (массив для временной валидации)
+            'colors' => 'nullable|array|exists:colors,id',
+            'new_colors' => 'nullable|array',
+        ];
+    
+        // Условно добавляем правила для new_colors только если НИЧЕГО не выбрано в селекте colors
+        if (empty($request->input('colors'))) {
+            $rules['new_colors.*.name'] = 'required|string|max:50';
+            $rules['new_colors.*.hex'] = [
+                'required',
                 'regex:/^#([A-Fa-f0-9]{6})$/i'
-            ],
-        ], [
+            ];
+        }
+    
+        // Валидируем запрос
+        $data = $request->validate($rules, [
             'name.required' => 'Поле "Название" обязательно.',
             'name.string' => 'Поле "Название" должно быть строкой.',
             'name.max' => 'Поле "Название" не должно превышать 50 символов.',
@@ -174,34 +185,49 @@ class EquipmentController extends Controller
             'model_folder.file' => 'Вы должны загрузить файл.',
             'model_folder.mimes' => 'Формат файла должен быть ZIP.',
             'model_folder.max' => 'Размер файла не должен превышать 50 МБ.',
-            'colors.required' => 'Поле "Цвета" обязательно.',
             'colors.array' => 'Поле "Цвета" должно быть массивом.',
-            'colors.min' => 'Необходимо выбрать хотя бы один цвет.',
-            'colors.*.exists' => 'Выбранный цвет не существует.',
-            'new_colors.*.name.required_with' => 'Название цвета обязательно, если указан HEX код.',
-            'new_colors.*.name.string' => 'Название цвета должно быть строковое.',
-            'new_colors.*.hex.required_with' => 'HEX код обязателен, если указано название.',
+            'colors.*.exists' => 'Один или несколько выбранных цветов не существуют.',
+            'new_colors.*.name.required' => 'Название цвета обязательно, если указан HEX код.',
+            'new_colors.*.hex.required' => 'HEX код обязателен, если указано название.',
             'new_colors.*.hex.regex' => 'HEX код должен быть в формате #FFFFFF.',
         ]);
-
+    
+        // Если выбраны существующие цвета, игнорируем новые
+        if ($request->filled('colors') && !$request->filled('new_colors')) {
+            $request->merge(['new_colors' => null]);
+        }
+    
+        // Проверка: хотя бы один цвет должен быть выбран/добавлен
+        $existingColors = $request->input('colors', []);
+        $hasExistingColors = is_array($existingColors) && count($existingColors) > 0;
+        
+        $newColors = $request->input('new_colors', []);
+        $hasNewColors = is_array($newColors) && !empty($newColors);
+        
+        if (!$hasExistingColors && !$hasNewColors) {
+            return back()
+                ->withInput()
+                ->withErrors(['colors' => 'Необходимо выбрать хотя бы один цвет или добавить новый.']);
+        }
+    
         DB::beginTransaction();
         try {
-            // Создаем комплектацию
             $equipment = Equipment::create($data);
-
+    
             // Обрабатываем модель
             if ($request->hasFile('model_folder')) {
                 $this->process3dModel($request->file('model_folder'), $equipment);
             }
-
-            // Обрабатываем цвета
+    
+            // Обработка цветов
             $this->processColors($request, $equipment);
-
-            \DB::commit();
+    
+            DB::commit();
+    
             return redirect()->route('admin.equipments.index')
                 ->with('success', 'Комплектация успешно добавлена');
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             return back()->withInput()
                 ->with('error', 'Ошибка при сохранении: ' . $e->getMessage());
         }
@@ -246,24 +272,27 @@ class EquipmentController extends Controller
         }
     }
 
-    protected function processColors($request, $equipment)
+    protected function processColors(Request $request, Equipment $equipment)
     {
-        $selectedColors = $request->input('colors', []);
+        $existingColors = $request->input('colors', []);
         $newColors = $request->input('new_colors', []);
-
-        $equipment->colors()->sync($selectedColors);
-
+    
+        // Прикрепляем существующие
+        if (!empty($existingColors)) {
+            $equipment->colors()->attach($existingColors);
+        }
+    
+        // Добавляем новые цвета
         foreach ($newColors as $colorData) {
             if (!empty($colorData['name']) && !empty($colorData['hex'])) {
                 $color = Color::firstOrCreate(
-                    ['name' => $colorData['name']],
-                    ['hex_code' => $colorData['hex']]
+                    ['hex_code' => $colorData['hex']],
+                    ['name' => $colorData['name']]
                 );
-                $equipment->colors()->attach($color);
+                $equipment->colors()->attach($color->id);
             }
         }
     }
-
     // Редактирование
     public function edit(Equipment $equipment)
     {

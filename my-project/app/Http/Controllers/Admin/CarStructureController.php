@@ -131,32 +131,33 @@ class CarStructureController extends Controller
     }
 
     public function updateModel(Request $request, CarModel $model)
-    {
-        $request->validate([
-            'brand_id' => 'required|exists:brands,id',
-            'model_name' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('car_models')->where(fn($query) => $query->where('brand_id', $request->brand_id))
-                    ->ignore($model->id),
-            ],
-        ], [
-            'brand_id.required' => 'Поле "Марка" обязательно для выбора.',
-            'brand_id.exists' => 'Выбранная марка не существует.',
-            'model_name.required' => 'Поле "Название модели" обязательно для заполнения.',
-            'model_name.string' => 'Название модели должно быть строкой.',
-            'model_name.max' => 'Название модели не должно превышать 50 символов.',
-            'model_name.unique' => 'Модель с таким названием уже существует у этой марки.',
-        ]);
+{
+    $request->validate([
+        'brand_id' => 'required|exists:brands,id',
+        'model_name' => [
+            'required',
+            'string',
+            'max:50',
+            Rule::unique('car_models', 'name')
+                ->where(fn($query) => $query->where('brand_id', $request->brand_id))
+                ->ignore($model->id),
+        ],
+    ], [
+        'brand_id.required' => 'Поле "Марка" обязательно для выбора.',
+        'brand_id.exists' => 'Выбранная марка не существует.',
+        'model_name.required' => 'Поле "Название модели" обязательно для заполнения.',
+        'model_name.string' => 'Название модели должно быть строкой.',
+        'model_name.max' => 'Название модели не должно превышать 50 символов.',
+        'model_name.unique' => 'Модель с таким названием уже существует у этой марки.',
+    ]);
 
-        $model->update([
-            'brand_id' => $request->brand_id,
-            'name' => $request->model_name,
-        ]);
+    $model->update([
+        'brand_id' => $request->brand_id,
+        'name' => $request->model_name,
+    ]);
 
-        return redirect()->route('admin.car-structure.index')->with('success', 'Модель успешно обновлена');
-    }
+    return redirect()->route('admin.car-structure.index')->with('success', 'Модель успешно обновлена');
+}
 
     public function destroyModel(CarModel $model)
     {
