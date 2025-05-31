@@ -34,7 +34,7 @@ class ReferenceController extends Controller
         // Фильтрация и пагинация для каждого справочника
         $bodyTypes = BodyType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_body_type', $bodyTypePage);
-        $countries = Country::when($search, fn($q) => $q->where('name', 'like', "%$search%")->orWhere('code', 'like', "%$search%"))
+        $countries = Country::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_country', $countryPage);
         $driveTypes = DriveType::when($search, fn($q) => $q->where('name', 'like', "%$search%"))
             ->paginate(10, ['*'], 'page_drive_type', $driveTypePage);

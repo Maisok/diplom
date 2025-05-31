@@ -224,25 +224,26 @@
       <!-- Список автомобилей -->
       <div class="lg:w-3/4">
         <div class="bg-[#2A2A2A] rounded-lg p-6">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">
-              <i class="fas fa-car mr-2 text-purple-400"></i> Найдено автомобилей: {{ $cars->total() }}
-            </h2>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h2 class="text-2xl font-bold">
+            <i class="fas fa-car mr-2 text-purple-400"></i> Найдено автомобилей: {{ $cars->total() }}
+          </h2>
+
+          <div class="flex flex-wrap items-center space-x-0 sm:space-x-2 space-y-2 sm:space-y-0">
+            <span class="text-sm text-gray-400 mr-2">Сортировка:</span>
             
-            <div class="flex items-center space-x-2">
-              <span class="text-sm text-gray-400">Сортировка:</span>
-              <select id="sort-select" class="px-3 py-1 rounded-md border border-gray-700 bg-[#3C3C3C] text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
-                <option value="price" {{ request('sort') == 'price' ? 'selected' : '' }}>По цене</option>
-                <option value="mileage" {{ request('sort') == 'mileage' ? 'selected' : '' }}>По пробегу</option>
-                <option value="year" {{ request('sort') == 'year' ? 'selected' : '' }}>По году</option>
-              </select>
-              
-              <select id="direction-select" class="px-3 py-1 rounded-md border border-gray-700 bg-[#3C3C3C] text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
-                <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>По возрастанию</option>
-                <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>По убывынию</option>
-              </select>
-            </div>
+            <select id="sort-select" class="px-3 py-1 rounded-md border border-gray-700 bg-[#3C3C3C] text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition w-full sm:w-auto mb-2 sm:mb-0">
+              <option value="price" {{ request('sort') == 'price' ? 'selected' : '' }}>По цене</option>
+              <option value="mileage" {{ request('sort') == 'mileage' ? 'selected' : '' }}>По пробегу</option>
+              <option value="year" {{ request('sort') == 'year' ? 'selected' : '' }}>По году</option>
+            </select>
+
+            <select id="direction-select" class="px-3 py-1 rounded-md border border-gray-700 bg-[#3C3C3C] text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition w-full sm:w-auto">
+              <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>По возрастанию</option>
+              <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>По убыванию</option>
+            </select>
           </div>
+        </div>
           
           @if($cars->isEmpty())
             <div class="text-center py-12">

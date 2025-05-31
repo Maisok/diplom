@@ -11,9 +11,30 @@ use Illuminate\Validation\Rules;
 class ManagerController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $managers = User::where('role', 'manager')->get();
+        // Начинаем запрос
+        $query = User::where('role', 'manager');
+    
+        // Поиск по имени
+        if ($request->has('name') && $request->name != '') {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+    
+        // Поиск по телефону
+        if ($request->has('phone') && $request->phone != '') {
+            $query->where('phone', 'like', '%' . $request->phone . '%');
+        }
+    
+        // Поиск по email
+        if ($request->has('email') && $request->email != '') {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
+    
+        // Получаем результаты
+        $managers = $query->get();
+    
+        // Передаём данные в представление
         return view('admin.managers.index', compact('managers'));
     }
 

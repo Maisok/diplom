@@ -329,7 +329,7 @@
             </a>
             
             <div class="flex items-center space-x-6">
-                <nav id="menu" class="hidden md:flex md:space-x-6 items-center">
+                <nav class="hidden md:flex md:space-x-6 items-center">
                     <a class="px-4 py-2 rounded-lg hover:bg-purple-600/20 transition-all" href="{{route('catalog')}}">Все авто</a>
                     <a class="px-4 py-2 rounded-lg hover:bg-purple-600/20 transition-all" href="{{route('dashboard')}}">Личный кабинет</a>
                     @auth
@@ -437,7 +437,7 @@
             <nav class="flex flex-col space-y-4">
                 <a class="px-4 py-3 rounded-lg hover:bg-purple-600/20 transition-all text-lg" href="{{route('catalog')}}">Все авто</a>
                 <a class="px-4 py-3 rounded-lg hover:bg-purple-600/20 transition-all text-lg" href="{{route('dashboard')}}">Личный кабинет</a>
-                <a class="px-4 py-3 rounded-lg hover:bg-purple-600/20 transition-all text-lg" href="#contact">Контакты</a>
+                <a class="px-4 py-3 rounded-lg hover:bg-purple-600/20 transition-all text-lg" href="{{route('branches.index')}}">Филиалы</a>
                 
                 @auth
                 <div class="mt-6 pt-6 border-t border-gray-700">
@@ -491,8 +491,7 @@
                     <ul class="space-y-2">
                         <li><a href="{{route('catalog')}}" class="text-gray-400 hover:text-purple-400 transition-colors">Все авто</a></li>
                         <li><a href="{{route('dashboard')}}" class="text-gray-400 hover:text-purple-400 transition-colors">Личный кабинет</a></li>
-                        <li><a href="#branches" class="text-gray-400 hover:text-purple-400 transition-colors">Филиалы</a></li>
-                        <li><a href="#contact" class="text-gray-400 hover:text-purple-400 transition-colors">Контакты</a></li>
+                        <li><a href="{{route('branches.index')}}" class="text-gray-400 hover:text-purple-400 transition-colors">Филиалы</a></li>
                     </ul>
                 </div>
                 
