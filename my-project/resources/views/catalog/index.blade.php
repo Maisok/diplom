@@ -1,6 +1,78 @@
 @extends('layouts.user')
 
 @section('content')
+<style>
+  /* Стили для основного поля выбора (темный фон) */
+.select2-container--default .select2-selection--single {
+    background-color: #3C3C3C !important;
+    border: 1px solid #4B5563 !important;
+    border-radius: 0.375rem !important;
+    height: 42px !important;
+    padding: 0.25rem 0.5rem !important;
+    transition: all 0.2s !important;
+}
+
+/* Стили для выпадающего списка (белый фон) */
+.select2-container--default .select2-results__option {
+    color: #333 !important; /* Темный текст для лучшей читаемости на белом фоне */
+    padding: 8px 12px !important;
+    background-color: white !important;
+}
+
+.select2-dropdown {
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Стили для выбранного и активного элементов */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #f3f4f6 !important;
+    color: #333 !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #e5e7eb !important;
+    color: #333 !important;
+}
+
+/* Стили для поля поиска */
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    color: #333 !important;
+    outline: none !important;
+}
+
+/* Иконка стрелки */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #ffffff transparent transparent transparent !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #ffffff transparent !important;
+}
+
+/* Стиль текста в основном поле (белый) */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+
+/* Стиль текста в выпадающем списке (темный) */
+.select2-container--default .select2-results__option {
+    color: #333 !important;
+}
+
+/* Стиль текста при наведении в выпадающем списке */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    color: #333 !important;
+}
+
+/* Стиль текста для выбранного элемента в списке */
+.select2-container--default .select2-results__option[aria-selected=true] {
+    color: #333 !important;
+}
+</style>
 <!-- Глобальный поиск -->
 <section class="p-6 bg-[#1C1B21]">
   <div class="container mx-auto">
@@ -40,8 +112,7 @@
               <!-- Марка -->
               <div>
                 <label class="block text-sm font-medium mb-2">Марка</label>
-                <select name="brand" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C]
-                 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                <select name="brand" id="brand-select" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
                   <option value="">Все марки</option>
                   @foreach($brands as $brand)
                     <option value="{{ $brand->id }}" {{ request('brand') == $brand->id ? 'selected' : '' }}>
@@ -50,43 +121,39 @@
                   @endforeach
                 </select>
               </div>
-
+              
               <!-- Модель -->
               <div>
                 <label class="block text-sm font-medium mb-2">Модель</label>
-                <select name="model" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                <select name="model" id="model-select" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
                   <option value="">Все модели</option>
-                  @foreach($models as $model)
-                    <option value="{{ $model->id }}" {{ request('model') == $model->id ? 'selected' : '' }}>
-                      {{ $model->name }}
-                    </option>
-                  @endforeach
+                  @if(request('model') && $selectedModel = \App\Models\CarModel::find(request('model')))
+                    <option value="{{ $selectedModel->id }}" selected>{{ $selectedModel->name }}</option>
+                  @endif
                 </select>
               </div>
-
+              
               <!-- Поколение -->
               <div>
                 <label class="block text-sm font-medium mb-2">Поколение</label>
-                <select name="generation" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                <select name="generation" id="generation-select" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
                   <option value="">Все поколения</option>
-                  @foreach($generations as $generation)
-                    <option value="{{ $generation->id }}" {{ request('generation') == $generation->id ? 'selected' : '' }}>
-                      {{ $generation->name }} ({{ $generation->year_from }})
+                  @if(request('generation') && $selectedGeneration = \App\Models\Generation::find(request('generation')))
+                    <option value="{{ $selectedGeneration->id }}" selected>
+                      {{ $selectedGeneration->name }} ({{ $selectedGeneration->year_from }})
                     </option>
-                  @endforeach
+                  @endif
                 </select>
               </div>
-
+              
               <!-- Комплектация -->
               <div>
                 <label class="block text-sm font-medium mb-2">Комплектация</label>
-                <select name="equipment" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                <select name="equipment" id="equipment-select" class="w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
                   <option value="">Все комплектации</option>
-                  @foreach($equipments as $equipment)
-                    <option value="{{ $equipment->id }}" {{ request('equipment') == $equipment->id ? 'selected' : '' }}>
-                      {{ $equipment->engine_name }}
-                    </option>
-                  @endforeach
+                  @if(request('equipment') && $selectedEquipment = \App\Models\Equipment::find(request('equipment')))
+                    <option value="{{ $selectedEquipment->id }}" selected>{{ $selectedEquipment->engine_name }}</option>
+                  @endif
                 </select>
               </div>
 
@@ -322,68 +389,7 @@
 @section('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Каскадное обновление моделей при изменении марки
-    document.querySelector('select[name="brand"]').addEventListener('change', function() {
-      const brandId = this.value;
-      const modelSelect = document.querySelector('select[name="model"]');
-      const generationSelect = document.querySelector('select[name="generation"]');
-      const equipmentSelect = document.querySelector('select[name="equipment"]');
-      
-      // Сбрасываем зависимые поля
-      modelSelect.innerHTML = '<option value="">Все модели</option>';
-      generationSelect.innerHTML = '<option value="">Все поколения</option>';
-      equipmentSelect.innerHTML = '<option value="">Все комплектации</option>';
-      
-      if (!brandId) return;
-  
-      fetch(`/api/models?brand_id=${brandId}`)
-        .then(response => response.json())
-        .then(data => {
-          data.forEach(model => {
-            modelSelect.innerHTML += `<option value="${model.id}">${model.name}</option>`;
-          });
-        });
-    });
-  
-    // Каскадное обновление поколений при изменении модели
-    document.querySelector('select[name="model"]').addEventListener('change', function() {
-      const modelId = this.value;
-      const generationSelect = document.querySelector('select[name="generation"]');
-      const equipmentSelect = document.querySelector('select[name="equipment"]');
-      
-      // Сбрасываем зависимые поля
-      generationSelect.innerHTML = '<option value="">Все поколения</option>';
-      equipmentSelect.innerHTML = '<option value="">Все комплектации</option>';
-      
-      if (!modelId) return;
-  
-      fetch(`/api/generations?model_id=${modelId}`)
-        .then(response => response.json())
-        .then(data => {
-          data.forEach(generation => {
-            generationSelect.innerHTML += `<option value="${generation.id}">${generation.name} (${generation.year_from})</option>`;
-          });
-        });
-    });
-  
-    // Каскадное обновление комплектаций при изменении поколения
-    document.querySelector('select[name="generation"]').addEventListener('change', function() {
-      const generationId = this.value;
-      const equipmentSelect = document.querySelector('select[name="equipment"]');
-      
-      // Сбрасываем поле
-      equipmentSelect.innerHTML = '<option value="">Все комплектации</option>';
-      
-      if (!generationId) return;
-  
-      fetch(`/api/equipments?generation_id=${generationId}`)
-        .then(response => response.json())
-        .then(data => {
-          data.forEach(equipment => {
-            equipmentSelect.innerHTML += `<option value="${equipment.id}">${equipment.engine_name}</option>`;
-          });
-        });
-    });
+
     
     // Быстрая сортировка
     const sortSelect = document.getElementById('sort-select');
@@ -399,6 +405,146 @@
         });
       });
     }
+  });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Синхронизация фокус-стилей
+$(document).on('focus', '.select2-selection', function() {
+    $(this).closest('.select2-container').addClass('focus-ring');
+});
+
+$(document).on('blur', '.select2-selection', function() {
+    $(this).closest('.select2-container').removeClass('focus-ring');
+});
+
+$('#model-select, #generation-select, #equipment-select').select2({
+    placeholder: "Выберите вариант",
+    allowClear: true,
+    width: '100%',
+    dropdownParent: $('.filter-sidebar'),
+    language: {
+        noResults: function() {
+            return "Ничего не найдено";
+        },
+        searching: function() {
+            return "Поиск...";
+        }
+    },
+    templateResult: function(data) {
+        if (!data.id) return data.text;
+        return $('<span>').css('color', '#333').text(data.text);
+    },
+    templateSelection: function(data) {
+        return $('<span>').css('color', '#fff').text(data.text);
+    }
+}).addClass('w-full px-4 py-2 rounded-md border border-gray-700 bg-[#3C3C3C] text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition');
+// Принудительно применяем стили после инициализации
+$('.select2-container').addClass('w-full');
+    // Инициализация Select2
+    $('#model-select').select2({
+      placeholder: "Выберите модель",
+      allowClear: true,
+      ajax: {
+        url: '/catalog/api/models',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            search: params.term,
+            brand_id: $('#brand-select').val()
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.map(item => ({
+              id: item.id,
+              text: item.name
+            }))
+          };
+        },
+        cache: true
+      }
+    });
+
+    $('#generation-select').select2({
+      placeholder: "Выберите поколение",
+      allowClear: true,
+      ajax: {
+        url: '/catalog/api/generations',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            search: params.term,
+            model_id: $('#model-select').val()
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data
+          };
+        },
+        cache: true
+      }
+    });
+
+    $('#equipment-select').select2({
+    placeholder: "Выберите комплектацию",
+    allowClear: true,
+    ajax: {
+        url: '/catalog/api/equipments',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+            return {
+                search: params.term,
+                generation_id: $('#generation-select').val()
+            };
+        },
+        processResults: function(data) {
+            return {
+                results: data
+            };
+        },
+        cache: true
+    }
+});
+
+    // Каскадное обновление при изменении марки
+    $('#brand-select').change(function() {
+      $('#model-select').val(null).trigger('change');
+      $('#generation-select').val(null).trigger('change');
+      $('#equipment-select').val(null).trigger('change');
+    });
+
+    // Каскадное обновление при изменении модели
+    $('#model-select').change(function() {
+      $('#generation-select').val(null).trigger('change');
+      $('#equipment-select').val(null).trigger('change');
+    });
+
+    // Каскадное обновление при изменении поколения
+    $('#generation-select').change(function() {
+      $('#equipment-select').val(null).trigger('change');
+    });
+
+    // Восстановление выбранных значений при загрузке страницы
+    @if(request('model'))
+      $('#model-select').html('<option value="{{ request('model') }}" selected>{{ $selectedModel->name }}</option>');
+    @endif
+    
+    @if(request('generation'))
+      $('#generation-select').html('<option value="{{ request('generation') }}" selected>{{ $selectedGeneration->name }} ({{ $selectedGeneration->year_from }})</option>');
+    @endif
+    
+    @if(request('equipment'))
+      $('#equipment-select').html('<option value="{{ request('equipment') }}" selected>{{ $selectedEquipment->name }}</option>');
+    @endif
   });
 </script>
 @endsection

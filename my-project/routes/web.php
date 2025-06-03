@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\CarModel;
 use App\Models\CarColor;
 use App\Models\Brand;
+use App\Http\Controllers\AjaxController;
 use App\Models\Branch;
 use App\Models\Generation;
 use Illuminate\Http\Request;
@@ -318,3 +319,8 @@ Route::get('/branches/{branch}/cars', function (Branch $branch) {
         ];
     });
 });
+
+
+Route::get('/catalog/api/models', [AjaxController::class, 'getModels']);
+Route::get('/catalog/api/generations', [AjaxController::class, 'getGenerations']);
+Route::get('/catalog/api/equipments', [AjaxController::class, 'getEquipments']);
