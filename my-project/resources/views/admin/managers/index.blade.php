@@ -43,6 +43,39 @@
             @endif
         </div>
 
+        <!-- Форма поиска -->
+<div class="mb-6 bg-white shadow rounded-lg p-4">
+    <form method="GET" action="{{ route('admin.managers.index') }}" class="flex flex-wrap gap-4 items-end">
+        <div class="flex-grow min-w-[200px]">
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+            <input type="text" id="name" name="name" value="{{ request('name') }}"
+                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </div>
+        <div class="flex-grow min-w-[200px]">
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+            <input type="text" id="phone" name="phone" value="{{ request('phone') }}"
+                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </div>
+        <div class="flex-grow min-w-[200px]">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="text" id="email" name="email" value="{{ request('email') }}"
+                   class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+        </div>
+        <div>
+            <button type="submit"
+                    class="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Искать
+            </button>
+        </div>
+        <div>
+            <a href="{{ route('admin.managers.index') }}"
+               class="inline-flex justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Сбросить
+            </a>
+        </div>
+    </form>
+</div>
+
         <!-- Форма добавления менеджера -->
         <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 mb-6">
             <div class="px-4 py-5 sm:px-6 border-b border-gray-200">

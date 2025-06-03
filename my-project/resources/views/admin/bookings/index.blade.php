@@ -35,40 +35,64 @@
             @endif
         </div>
 
-        <form action="{{ route('export.bookings') }}" method="GET">
-            <div>
-                <label>Статус:</label>
-                <select name="status">
-                    <option value="">Все</option>
-                    <option value="pending">Ожидает подтверждения</option>
-                    <option value="confirmed">Подтверждено</option>
-                    <option value="rejected">Отклонено</option>
-                    <option value="completed">Завершено</option>
-                </select>
+       <!-- Стилизованная форма -->
+<div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 mb-6">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-sm sm:text-base font-medium text-gray-700">Экспорт бронирований</h3>
+    </div>
+    <div class="p-4 sm:p-6">
+        <form action="{{ route('export.bookings') }}" method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Статус -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+                    <select name="status" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <option value="">Все статусы</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Ожидает подтверждения</option>
+                        <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Подтверждено</option>
+                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Отклонено</option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Завершено</option>
+                    </select>
+                </div>
+
+                <!-- Менеджер -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Менеджер</label>
+                    <select name="manager_id" class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <option value="">Все менеджеры</option>
+                        @foreach ($managers as $manager)
+                            <option value="{{ $manager->id }}" {{ request('manager_id') == $manager->id ? 'selected' : '' }}>
+                                {{ $manager->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Дата с -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Дата от</label>
+                    <input type="date" name="start_date" value="{{ request('start_date') }}"
+                           class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                </div>
+
+                <!-- Дата по -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Дата до</label>
+                    <input type="date" name="end_date" value="{{ request('end_date') }}"
+                           class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                </div>
             </div>
-        
-            <div>
-                <label>Менеджер:</label>
-                <select name="manager_id">
-                    <option value="">Все</option>
-                    @foreach($managers as $manager)
-                        <option value="{{ $manager->id }}">{{ $manager->name }}</option>
-                    @endforeach
-                </select>
+
+            <!-- Кнопки -->
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="submit"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Экспортировать
+                </button>
             </div>
-        
-            <div>
-                <label>Дата с:</label>
-                <input type="date" name="start_date" value="{{ request('start_date') }}">
-            </div>
-        
-            <div>
-                <label>Дата по:</label>
-                <input type="date" name="end_date" value="{{ request('end_date') }}">
-            </div>
-        
-            <button type="submit">Экспортировать</button>
         </form>
+    </div>
+</div>
 
         <!-- Фильтры -->
         <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200 mb-6">

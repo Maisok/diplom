@@ -143,16 +143,7 @@
                                            class="inline-block px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-all">
                                             Редактировать
                                         </a>
-                                        <form action="{{ route('manager.bookings.destroy', $booking) }}" method="POST"
-                                              onsubmit="return confirm('Вы уверены?')"
-                                              class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-all">
-                                                Удалить
-                                            </button>
-                                        </form>
+                                       
                                     @else
                                         <span class="text-gray-500">Занято</span>
                                     @endif

@@ -121,8 +121,6 @@
                                 <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Цена ↓</option>
                                 <option value="mileage_asc" {{ request('sort') === 'mileage_asc' ? 'selected' : '' }}>Пробег ↑</option>
                                 <option value="mileage_desc" {{ request('sort') === 'mileage_desc' ? 'selected' : '' }}>Пробег ↓</option>
-                                <option value="year_asc" {{ request('sort') === 'year_asc' ? 'selected' : '' }}>Год ↑</option>
-                                <option value="year_desc" {{ request('sort') === 'year_desc' ? 'selected' : '' }}>Год ↓</option>
                             </select>
                         </div>
 

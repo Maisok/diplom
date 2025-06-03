@@ -236,40 +236,46 @@ class EquipmentController extends Controller
     protected function process3dModel($file, $equipment)
     {
         $publicDir = storage_path('app/public');
-
-        if ($file) {
-            $tempName = 'model_'.$equipment->id.'_'.time().'.zip';
-            $tempPath = storage_path('app/temp/'.$tempName);
-            file_put_contents($tempPath, file_get_contents($file->getRealPath()));
-
-            $extractPath = $publicDir.'/3d_models/equipment_'.$equipment->id;
-            if (is_dir($extractPath)) {
-                array_map('unlink', glob("$extractPath/*"));
-                rmdir($extractPath);
-            }
-
-            mkdir($extractPath, 0755, true);
-
-            $zip = new \ZipArchive;
-            if ($zip->open($tempPath) !== true) {
-                unlink($tempPath);
-                throw new \Exception("Ошибка открытия ZIP");
-            }
-
-            $zip->extractTo($extractPath);
-            $zip->close();
-            unlink($tempPath);
-
-            if (!file_exists($extractPath.'/scene.gltf')) {
-                array_map('unlink', glob("$extractPath/*"));
-                rmdir($extractPath);
-                throw new \Exception("Не найден scene.gltf");
-            }
-
-            $equipment->update([
-                'model_path' => '3d_models/equipment_'.$equipment->id
-            ]);
+        $extractPath = $publicDir.'/3d_models/equipment_'.$equipment->id;
+    
+        // Удаление старой модели, если есть
+        if (file_exists($extractPath)) {
+            $this->deleteDirectory($extractPath);
         }
+    
+        // Создаем временную папку, если её нет
+        $tempDir = storage_path('app/temp');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+    
+        // Сохраняем временный ZIP
+        $tempName = 'model_'.$equipment->id.'_'.time().'.zip';
+        $tempPath = $tempDir.'/'.$tempName;
+        file_put_contents($tempPath, file_get_contents($file->getRealPath()));
+    
+        // Распаковка
+        $zip = new \ZipArchive;
+        if ($zip->open($tempPath) !== true) {
+            unlink($tempPath);
+            throw new \Exception("Ошибка открытия ZIP");
+        }
+    
+        mkdir($extractPath, 0755, true);
+        $zip->extractTo($extractPath);
+        $zip->close();
+        unlink($tempPath);
+    
+        // Проверка наличия scene.gltf
+        if (!file_exists($extractPath.'/scene.gltf')) {
+            $this->deleteDirectory($extractPath);
+            throw new \Exception("Файл scene.gltf не найден в архиве");
+        }
+    
+        // Сохраняем путь к модели
+        $equipment->update([
+            'model_path' => '3d_models/equipment_'.$equipment->id
+        ]);
     }
 
     protected function processColors(Request $request, Equipment $equipment)
@@ -459,8 +465,7 @@ class EquipmentController extends Controller
         if ($equipment->model_path) {
             $path = storage_path('app/public/' . $equipment->model_path);
             if (file_exists($path)) {
-                array_map('unlink', glob("$path/*"));
-                rmdir($path);
+                $this->deleteDirectory($path); // <-- Теперь удаляет правильно
             }
             $equipment->update(['model_path' => null]);
         }
@@ -527,4 +532,32 @@ class EquipmentController extends Controller
         $color->delete();
         return back()->with('success', 'Цвет успешно удалён');
     }
+
+
+    /**
+ * Рекурсивно удаляет директорию и всё её содержимое
+ *
+ * @param string $dir
+ */
+protected function deleteDirectory($dir)
+{
+    if (!file_exists($dir)) {
+        return;
+    }
+
+    $items = scandir($dir);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+
+        $path = $dir . DIRECTORY_SEPARATOR . $item;
+
+        if (is_dir($path)) {
+            $this->deleteDirectory($path); // Рекурсия
+        } else {
+            @unlink($path); // Игнорируем ошибки
+        }
+    }
+
+    @rmdir($dir); // Игнорируем ошибки
+}
 }
